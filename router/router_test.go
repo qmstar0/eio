@@ -7,7 +7,6 @@ import (
 	"EventDriven/router"
 	"context"
 	"fmt"
-	"github.com/asaskevich/EventBus"
 	"github.com/google/uuid"
 	"testing"
 	"time"
@@ -33,7 +32,7 @@ func TestNewRouter(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	goPubsub := gopubsub.NewGoPubsub("test", EventBus.New())
+	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
 
 	newRouter, err := router.NewRouter(router.RouterConfig{})
 	if err != nil {
@@ -61,7 +60,7 @@ func TestNewRouter(t *testing.T) {
 func TestHandler_Dispatch(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	goPubsub := gopubsub.NewGoPubsub("test", EventBus.New())
+	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
 
 	newRouter, err := router.NewRouter(router.RouterConfig{})
 	if err != nil {
@@ -100,7 +99,7 @@ func TestRouter_AddHandleMiddleware(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	goPubsub := gopubsub.NewGoPubsub("test", EventBus.New())
+	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
 
 	newRouter, err := router.NewRouter(router.RouterConfig{})
 	if err != nil {
@@ -153,7 +152,7 @@ func TestHandler(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	goPubsub := gopubsub.NewGoPubsub("test", EventBus.New())
+	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
 
 	newRouter, err := router.NewRouter(router.RouterConfig{})
 	if err != nil {

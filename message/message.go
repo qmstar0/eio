@@ -1,6 +1,10 @@
+// 原文件地址:https://github.com/ThreeDotsLabs/watermill/blob/master/message/message.go
+
 package message
 
 import (
+	"bytes"
+	"context"
 	"sync"
 )
 
@@ -40,6 +44,8 @@ type Message struct {
 
 	ackMutex    sync.Mutex
 	ackSentType ackType
+
+	ctx context.Context
 }
 
 // NewMessage creates a new Message with given uuid and payload.
@@ -60,6 +66,22 @@ const (
 	ack
 	nack
 )
+
+// Equals compare, that two messages are equal. Acks/Nacks are not compared.
+func (m *Message) Equals(toCompare *Message) bool {
+	if m.UUID != toCompare.UUID {
+		return false
+	}
+	if len(m.Metadata) != len(toCompare.Metadata) {
+		return false
+	}
+	for key, value := range m.Metadata {
+		if value != toCompare.Metadata[key] {
+			return false
+		}
+	}
+	return bytes.Equal(m.Payload, toCompare.Payload)
+}
 
 // Ack sends message's acknowledgement.
 //
@@ -140,6 +162,23 @@ func (m *Message) Acked() <-chan struct{} {
 //	}
 func (m *Message) Nacked() <-chan struct{} {
 	return m.noAck
+}
+
+// Context returns the message's context. To change the context, use
+// SetContext.
+//
+// The returned context is always non-nil; it defaults to the
+// background context.
+func (m *Message) Context() context.Context {
+	if m.ctx != nil {
+		return m.ctx
+	}
+	return context.Background()
+}
+
+// SetContext sets provided context to the message.
+func (m *Message) SetContext(ctx context.Context) {
+	m.ctx = ctx
 }
 
 // Copy copies all message without Acks/Nacks.

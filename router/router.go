@@ -1,3 +1,15 @@
+// 原文件地址:https://github.com/ThreeDotsLabs/watermill/blob/master/message/router.go
+//
+// 该部分有以下修改
+// - 取消Log
+// - 取消Plugin
+// - 取消PublisherDecorators
+// - 取消SubscriberDecorators
+// - 删除AddNoPublisherHandler方法
+// - 修改middleware相关
+// - 修改AddHandler方法
+// - 重制为handler设置路由的方法
+
 package router
 
 import (
@@ -309,4 +321,19 @@ func (r *Router) IsClosed() bool {
 	defer r.closedLock.Unlock()
 
 	return r.closed
+}
+
+// IsRunning Router状态
+func (r *Router) IsRunning() bool {
+	select {
+	case <-r.running:
+		return true
+	default:
+		return false
+	}
+}
+
+// Running 运行状态
+func (r *Router) Running() <-chan struct{} {
+	return r.running
 }

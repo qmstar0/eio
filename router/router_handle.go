@@ -1,3 +1,13 @@
+// 原文件地址:https://github.com/ThreeDotsLabs/watermill/blob/master/message/router.go
+//
+// 该部分有以下修改
+// - 取消Log
+// - 取消publisherDecorators
+// - 取消subscriberDecorators
+// - 修改Middleware相关
+// - 重制为handler设置路由的方法
+// - 重制后的Handler.Dispatch()基本上覆盖了转发器的作用
+
 package router
 
 import (
@@ -161,4 +171,25 @@ func (h Handler) AddHandleMiddleware(fns ...HandleMiddleware) {
 	for _, fn := range fns {
 		h.handler.handleMiddleware = append(h.handler.handleMiddleware, fn)
 	}
+}
+
+// Started returns channel which is stopped when handler is running.
+func (h Handler) Started() chan struct{} {
+	return h.handler.startedCh
+}
+
+// Stop stops the handler.
+// Stop is asynchronous.
+// You can check if handler was stopped with Stopped() function.
+func (h Handler) Stop() {
+	if !h.handler.started {
+		panic("handler is not started")
+	}
+
+	h.handler.stopFn()
+}
+
+// Stopped returns channel which is stopped when handler did stop.
+func (h Handler) Stopped() chan struct{} {
+	return h.handler.stopped
 }

@@ -1,3 +1,5 @@
+//原文件地址:https://github.com/ThreeDotsLabs/watermill/blob/master/message/metadata.go
+
 package message
 
 // Metadata is sent with every message to provide extra context without unmarshaling the message payload.
