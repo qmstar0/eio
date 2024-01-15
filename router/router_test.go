@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/qmstar0/eventRouter/internal"
 	"github.com/qmstar0/eventRouter/message"
-	"github.com/qmstar0/eventRouter/pubsub"
-	"github.com/qmstar0/eventRouter/pubsub/gopubsub"
+	gopubsub2 "github.com/qmstar0/eventRouter/pubsub/gopubsub"
 	"github.com/qmstar0/eventRouter/router"
 	"testing"
 	"time"
 )
 
-func producer(ctx context.Context, topic string, pub pubsub.Publisher) {
+func producer(ctx context.Context, topic string, pub internal.Publisher) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -32,7 +32,7 @@ func TestNewRouter(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := gopubsub2.NewGoPubsub("test", gopubsub2.GoPubsubConfig{})
 
 	newRouter, err := router.NewRouter(router.RouterConfig{})
 	if err != nil {
@@ -60,7 +60,7 @@ func TestNewRouter(t *testing.T) {
 func TestHandler_Dispatch(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := gopubsub2.NewGoPubsub("test", gopubsub2.GoPubsubConfig{})
 
 	newRouter, err := router.NewRouter(router.RouterConfig{})
 	if err != nil {
@@ -99,7 +99,7 @@ func TestRouter_AddHandleMiddleware(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := gopubsub2.NewGoPubsub("test", gopubsub2.GoPubsubConfig{})
 
 	newRouter, err := router.NewRouter(router.RouterConfig{})
 	if err != nil {
@@ -152,7 +152,7 @@ func TestHandler(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := gopubsub2.NewGoPubsub("test", gopubsub2.GoPubsubConfig{})
 
 	newRouter, err := router.NewRouter(router.RouterConfig{})
 	if err != nil {

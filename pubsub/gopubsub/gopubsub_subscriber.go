@@ -18,17 +18,6 @@ type subscriber struct {
 	closed  bool
 }
 
-func (s *subscriber) waitClose(wg *sync.WaitGroup, closeing <-chan struct{}) {
-	select {
-	case <-s.ctx.Done():
-		wg.Done()
-		close(s.messageCh)
-		return
-	case <-closeing:
-		return
-	}
-}
-
 func (s *subscriber) Close() {
 	if s.closed {
 		return

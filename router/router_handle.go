@@ -13,8 +13,8 @@ package router
 import (
 	"context"
 	"fmt"
+	"github.com/qmstar0/eventRouter/internal"
 	"github.com/qmstar0/eventRouter/message"
-	"github.com/qmstar0/eventRouter/pubsub"
 	"sync"
 )
 
@@ -34,11 +34,11 @@ type handler struct {
 	//subscriber
 	//该handler订阅的topic和使用的Subscriber
 	subscribeTopic string
-	subscriber     pubsub.Subscriber
+	subscriber     internal.Subscriber
 
 	//publisherMap
 	//handler返回的message会按照publisherMap重新发布
-	publisherMap     map[string]pubsub.Publisher
+	publisherMap     map[string]internal.Publisher
 	publisherMapLock *sync.Mutex
 
 	// 处理方法
@@ -129,7 +129,7 @@ func (h handler) handleMessage(msg *message.Message, handler DispatchHandleFunc)
 }
 
 // 通过装饰器的形式为handler设置转发
-func (h handler) getDecoratedFunc(handlerFn DispatchHandleFunc, topic string, pub pubsub.Publisher) DispatchHandleFunc {
+func (h handler) getDecoratedFunc(handlerFn DispatchHandleFunc, topic string, pub internal.Publisher) DispatchHandleFunc {
 	return func(msg *message.Message) ([]*message.Message, error) {
 		var err error
 		msgs, err := handlerFn(msg)
@@ -152,7 +152,7 @@ type Handler struct {
 	handler *handler
 }
 
-func (h Handler) Dispatch(topic string, pub pubsub.Publisher) {
+func (h Handler) Dispatch(topic string, pub internal.Publisher) {
 
 	//重复添加可能会导致用户错过一些东西
 	h.handler.publisherMapLock.Lock()
