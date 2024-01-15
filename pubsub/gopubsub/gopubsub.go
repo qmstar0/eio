@@ -26,6 +26,20 @@ type GoPubsub struct {
 	closedLock sync.Mutex
 }
 
+func NewGoPubsub(name string, config GoPubsubConfig) *GoPubsub {
+	return &GoPubsub{
+		name:            name,
+		config:          config,
+		subscribers:     make(map[string][]*subscriber),
+		subscribersLock: sync.RWMutex{},
+		topicLock:       sync.Map{},
+		subscribersWg:   sync.WaitGroup{},
+		closing:         make(chan struct{}),
+		closed:          false,
+		closedLock:      sync.Mutex{},
+	}
+}
+
 func (g *GoPubsub) Name() string {
 	return g.name
 }
@@ -92,9 +106,12 @@ func (g *GoPubsub) Subscribe(ctx context.Context, topic string) (<-chan *message
 	subLock.(*sync.Mutex).Lock()
 
 	s := &subscriber{
-		ctx:       ctx,
-		messageCh: make(chan *message.Message, g.config.MessageChannelBuffer),
-		closing:   make(chan struct{}),
+		ctx:           ctx,
+		messageCh:     make(chan *message.Message, g.config.MessageChannelBuffer),
+		messageChLock: sync.Mutex{},
+
+		closed:  false,
+		closing: make(chan struct{}),
 	}
 
 	go func(s *subscriber, g *GoPubsub) {

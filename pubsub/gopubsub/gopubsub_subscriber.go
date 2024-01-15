@@ -12,13 +12,13 @@ type subscriber struct {
 	ctx context.Context
 
 	messageCh     chan *message.Message
-	messageChLock *sync.Mutex
+	messageChLock sync.Mutex
 
 	closing chan struct{}
 	closed  bool
 }
 
-func (s subscriber) waitClose(wg *sync.WaitGroup, closeing <-chan struct{}) {
+func (s *subscriber) waitClose(wg *sync.WaitGroup, closeing <-chan struct{}) {
 	select {
 	case <-s.ctx.Done():
 		wg.Done()
@@ -29,7 +29,7 @@ func (s subscriber) waitClose(wg *sync.WaitGroup, closeing <-chan struct{}) {
 	}
 }
 
-func (s subscriber) Close() {
+func (s *subscriber) Close() {
 	if s.closed {
 		return
 	}
@@ -42,7 +42,7 @@ func (s subscriber) Close() {
 
 	close(s.messageCh)
 }
-func (s subscriber) sendMessageToMessageChannel(msg *message.Message) {
+func (s *subscriber) sendMessageToMessageChannel(msg *message.Message) {
 	s.messageChLock.Lock()
 	defer s.messageChLock.Unlock()
 
