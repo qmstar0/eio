@@ -58,9 +58,9 @@ type handler struct {
 	//handler状态相关
 	started        bool
 	startedCh      chan struct{}
-	stopFn         context.CancelFunc
 	stopped        chan struct{}
 	routersCloseCh <-chan struct{}
+	stopFn         context.CancelFunc
 }
 
 func (h handler) run(ctx context.Context, middlewares []HandleMiddleware) {
