@@ -11,10 +11,10 @@
 package router
 
 import (
-	"EventDriven/message"
-	"EventDriven/pubsub"
 	"context"
 	"fmt"
+	"github.com/qmstar0/eventRouter/message"
+	"github.com/qmstar0/eventRouter/pubsub"
 	"sync"
 )
 

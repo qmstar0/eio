@@ -1,4 +1,4 @@
-module EventDriven
+module github.com/qmstar0/eventRouter
 
 go 1.21
 

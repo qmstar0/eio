@@ -1,13 +1,13 @@
 package router_test
 
 import (
-	"EventDriven/message"
-	"EventDriven/pubsub"
-	"EventDriven/pubsub/gopubsub"
-	"EventDriven/router"
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/qmstar0/eventRouter/message"
+	"github.com/qmstar0/eventRouter/pubsub"
+	"github.com/qmstar0/eventRouter/pubsub/gopubsub"
+	"github.com/qmstar0/eventRouter/router"
 	"testing"
 	"time"
 )

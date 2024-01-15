@@ -13,10 +13,10 @@
 package router
 
 import (
-	"EventDriven/pubsub"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/qmstar0/eventRouter/pubsub"
 	"sync"
 	"time"
 )

@@ -1,8 +1,8 @@
 package pubsub
 
 import (
-	"EventDriven/message"
 	"context"
+	"github.com/qmstar0/eventRouter/message"
 )
 
 type Publisher interface {

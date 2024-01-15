@@ -3,9 +3,9 @@
 package gopubsub
 
 import (
-	"EventDriven/message"
 	"context"
 	"errors"
+	"github.com/qmstar0/eventRouter/message"
 	"sync"
 )
 
