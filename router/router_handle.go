@@ -52,7 +52,7 @@ type handler struct {
 	handleMiddleware     []HandleMiddleware
 	handleMiddlewareLock *sync.Mutex
 
-	//数据读取接口
+	//数据读取Channel
 	messagesCh <-chan *message.Message
 
 	//handler状态相关
