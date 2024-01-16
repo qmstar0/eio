@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/qmstar0/eventRouter/internal"
 	"github.com/qmstar0/eventRouter/message"
+	"github.com/qmstar0/eventRouter/pubsub"
 	gopubsub2 "github.com/qmstar0/eventRouter/pubsub/gopubsub"
 	"github.com/qmstar0/eventRouter/router"
 	"testing"
 	"time"
 )
 
-func producer(ctx context.Context, topic string, pub internal.Publisher) {
+func producer(ctx context.Context, topic string, pub pubsub.Publisher) {
 	for {
 		select {
 		case <-ctx.Done():

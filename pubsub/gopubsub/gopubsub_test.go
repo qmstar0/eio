@@ -2,8 +2,8 @@ package gopubsub_test
 
 import (
 	"context"
-	"github.com/qmstar0/eventRouter/internal"
 	"github.com/qmstar0/eventRouter/message"
+	"github.com/qmstar0/eventRouter/pubsub"
 	"github.com/qmstar0/eventRouter/pubsub/gopubsub"
 	"testing"
 	"time"
@@ -11,7 +11,7 @@ import (
 
 var TestRunDuration = time.Second * 5
 
-func Publisher(t *testing.T, pub internal.Publisher, ctx context.Context) {
+func Publisher(t *testing.T, pub pubsub.Publisher, ctx context.Context) {
 	var count = 0
 	for {
 		select {
@@ -35,14 +35,14 @@ func Publisher(t *testing.T, pub internal.Publisher, ctx context.Context) {
 func TestGoPubsub(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	pubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
 
-	go Publisher(t, pubsub, ctx)
+	go Publisher(t, goPubsub, ctx)
 
 	subCtx, subCancel := context.WithCancel(ctx)
 	defer subCancel()
 
-	messageCh, err := pubsub.Subscribe(subCtx, "pub_test")
+	messageCh, err := goPubsub.Subscribe(subCtx, "pub_test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,21 +56,21 @@ func TestGoPubsub(t *testing.T) {
 func TestGoPubsub_Close(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	pubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
 
-	go Publisher(t, pubsub, ctx)
+	go Publisher(t, goPubsub, ctx)
 
 	subCtx, subCancel := context.WithCancel(ctx)
 	defer subCancel()
 
-	messageCh, err := pubsub.Subscribe(subCtx, "pub_test")
+	messageCh, err := goPubsub.Subscribe(subCtx, "pub_test")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	go func() {
 		time.Sleep(time.Second * 3)
-		err = pubsub.Close()
+		err = goPubsub.Close()
 		if err != nil {
 			t.Error(err)
 			return

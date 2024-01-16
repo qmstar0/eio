@@ -16,7 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/qmstar0/eventRouter/internal"
+	"github.com/qmstar0/eventRouter/pubsub"
 	"sync"
 	"time"
 )
@@ -189,7 +189,7 @@ func (r *Router) AddHandleMiddleware(fns ...HandleMiddleware) {
 func (r *Router) AddHandler(
 	handlerName string,
 	subscribeTopic string,
-	subscriber internal.Subscriber,
+	subscriber pubsub.Subscriber,
 	handlerFn DispatchHandleFunc,
 ) *Handler {
 	r.handlersLock.Lock()
@@ -204,7 +204,7 @@ func (r *Router) AddHandler(
 		subscribeTopic: subscribeTopic,
 		subscriber:     subscriber,
 
-		publisherMap:     make(map[string]internal.Publisher),
+		publisherMap:     make(map[string]pubsub.Publisher),
 		publisherMapLock: &sync.Mutex{},
 
 		handlerFn: handlerFn,
