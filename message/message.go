@@ -1,5 +1,3 @@
-// 原文件地址:https://github.com/ThreeDotsLabs/watermill/blob/master/message/message.go
-
 package message
 
 import (

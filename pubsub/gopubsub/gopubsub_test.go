@@ -2,16 +2,17 @@ package gopubsub_test
 
 import (
 	"context"
-	"github.com/qmstar0/eventRouter/message"
-	"github.com/qmstar0/eventRouter/pubsub"
-	"github.com/qmstar0/eventRouter/pubsub/gopubsub"
+	"github.com/qmstar0/eventDriven"
+	"github.com/qmstar0/eventDriven/message"
+	"github.com/qmstar0/eventDriven/pubsub/gopubsub"
+	"sync"
 	"testing"
 	"time"
 )
 
-var TestRunDuration = time.Second * 5
+var TestRunDuration = time.Second * 3
 
-func Publisher(t *testing.T, pub pubsub.Publisher, ctx context.Context) {
+func Publisher(t *testing.T, pub eventDriven.Publisher, ctx context.Context) {
 	var count = 0
 	for {
 		select {
@@ -84,4 +85,41 @@ func TestGoPubsub_Close(t *testing.T) {
 	}
 
 	time.Sleep(time.Millisecond * 500)
+}
+
+func TestPublishers(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
+	defer cancel()
+	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+
+	go Publisher(t, goPubsub, ctx)
+
+	subCtx, subCancel := context.WithCancel(ctx)
+	defer subCancel()
+
+	messageCh1, err := goPubsub.Subscribe(subCtx, "pub_test")
+	messageCh2, err := goPubsub.Subscribe(subCtx, "pub_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wg := &sync.WaitGroup{}
+	go func() {
+		wg.Add(1)
+		for msg := range messageCh1 {
+			t.Log("1收到消息:", msg)
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		wg.Add(1)
+		for msg := range messageCh2 {
+			t.Log("2收到消息:", msg)
+		}
+		wg.Done()
+	}()
+
+	time.Sleep(time.Millisecond * 500)
+	wg.Wait()
 }

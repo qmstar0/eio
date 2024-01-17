@@ -1,10 +1,8 @@
-// 原文件地址:https://github.com/ThreeDotsLabs/watermill/blob/master/pubsub/gochannel/pubsub.go
-
 package gopubsub
 
 import (
 	"context"
-	"github.com/qmstar0/eventRouter/message"
+	"github.com/qmstar0/eventDriven/message"
 	"sync"
 )
 
