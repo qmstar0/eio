@@ -51,7 +51,7 @@ func TestNewHandler(t *testing.T) {
 			t.Log("sub", msg)
 			return []*message.Message{msg}, nil
 		})
-		handlerMain.Repost(handlerSub, pubsub)
+		handlerMain.Forword("sub", pubsub)
 		go handlerSub.Run(ctx)
 		handlerMain.Run(ctx)
 	})
@@ -63,7 +63,7 @@ func TestNewHandler(t *testing.T) {
 
 		go producer(ctx, "main", pubsub)
 
-		handlerMain.Use(func(fn processor.HandlerFunc) processor.HandlerFunc {
+		handlerMain.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {
 			return func(msg *message.Message) ([]*message.Message, error) {
 				t.Log("main执行前")
 				messages, err := fn(msg)
@@ -90,16 +90,3 @@ func TestNewHandler(t *testing.T) {
 		handlerMain.Stop()
 	})
 }
-
-//func testHandler_Use(t *testing.T, pubsub *gopubsub.GoPubsub) {
-//
-//}
-//
-//func testHandler_Repost(t *testing.T, pubsub *gopubsub.GoPubsub) {
-//}
-//
-//func testHandler_Run(t *testing.T, pubsub *gopubsub.GoPubsub) {
-//}
-//
-//func testHandler_Stop(t *testing.T, pubsub *gopubsub.GoPubsub) {
-//}

@@ -123,3 +123,8 @@ func TestPublishers(t *testing.T) {
 	time.Sleep(time.Millisecond * 500)
 	wg.Wait()
 }
+func Test(t *testing.T) {
+	var str = []string{"1", "@"}
+	str = append([]string{}, str...)
+	t.Log(str)
+}

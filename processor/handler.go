@@ -9,19 +9,22 @@ import (
 
 type HandlerFunc func(msg *message.Message) ([]*message.Message, error)
 
-type HandleMiddleware func(fn HandlerFunc) HandlerFunc
+type HandlerMiddleware func(fn HandlerFunc) HandlerFunc
 
 type Handler struct {
 	subscriber      eventDriven.Subscriber
 	subscriberTopic string
 
-	publisherMap     map[string]eventDriven.Publisher
-	publisherMapLock sync.Mutex
+	forwarders     []*Forwarder
+	forwardersLock sync.Mutex
+
+	//publisherMap     map[string]eventDriven.Publisher
+	//publisherMapLock sync.Mutex
 
 	runningHandlersWgLock sync.Mutex
 	runningHandlersWg     sync.WaitGroup
 
-	middleware     []HandleMiddleware
+	middleware     []HandlerMiddleware
 	middlewareLock sync.Mutex
 
 	handlerFn HandlerFunc
@@ -42,29 +45,40 @@ func NewHandler(topic string, sub eventDriven.Subscriber, fn HandlerFunc) *Handl
 		runningHandlersWg:     sync.WaitGroup{},
 		runningHandlersWgLock: sync.Mutex{},
 
-		middleware:     make([]HandleMiddleware, 0),
+		middleware:     make([]HandlerMiddleware, 0),
 		middlewareLock: sync.Mutex{},
 
-		publisherMap:     make(map[string]eventDriven.Publisher),
-		publisherMapLock: sync.Mutex{},
+		forwarders:     make([]*Forwarder, 0),
+		forwardersLock: sync.Mutex{},
+
+		//publisherMap:     make(map[string]eventDriven.Publisher),
+		//publisherMapLock: sync.Mutex{},
 
 		started:   false,
 		startedCh: make(chan struct{}),
 	}
 }
+
 func (h *Handler) Run(ctx context.Context) {
 
+	// 初始化一个空的[]HandlerMiddleware
+	// 然后依次加入
+	// - 中间件(middlewares)
+	// - 以中间件形式使用的转发中间件(getForwarderMiddlewares(h.forwarders))
+	allMiddlewares := append(append([]HandlerMiddleware(nil),
+		h.middleware...), getForwarderMiddlewares(h.forwarders)...)
+
 	//添加中间件
-	for _, middleware := range h.middleware {
+	for _, middleware := range allMiddlewares {
 		handlerFn := h.handlerFn
 		h.handlerFn = middleware(handlerFn)
 	}
 
 	//添加发布者
-	for topic, publisher := range h.publisherMap {
-		handlerFn := h.handlerFn
-		h.handlerFn = h.getDecoratedFunc(handlerFn, topic, publisher)
-	}
+	//for _, forwarder := range h.forwarders {
+	//	handlerFn := h.handlerFn
+	//	h.handlerFn = h.getDecoratedFunc(handlerFn, forwarder.Topic, forwarder.Publisher)
+	//}
 
 	subCtx, cancel := context.WithCancel(ctx)
 
@@ -92,6 +106,8 @@ func (h *Handler) Run(ctx context.Context) {
 	h.startedCh = make(chan struct{})
 	h.started = false
 	close(h.stopped)
+
+	h.runningHandlersWg.Wait()
 }
 
 func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
@@ -103,15 +119,33 @@ func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
 		}
 	}()
 
-	//producedMessages, err := handler(msg)
+	//producedMessages, err := handlerFn(msg)
 	_, err := handlerFn(msg)
 	if err != nil {
 		msg.Nack()
 		return
 	}
 
+	//if len(producedMessages) != 0 {
+	//	h.forwardMessage(producedMessages)
+	//}
+
 	msg.Ack()
 }
+
+// 关于转发handler处理返回的[]*Message，有两种方法
+// 1.将返回的producedMessages循环发布(forwardMessage)
+// 2.以中间件的形式发布(Forward.middleware)
+// 两者在实现的复杂度上差不多，但在维护的复杂度上，我认为只使用中间件这一种形式更利于阅读和扩展
+//
+//func (h *Handler) forwardMessage(msgs []*message.Message) {
+//	for _, forwarder := range h.forwarders {
+//		err := forwarder.Publisher.Publish(forwarder.Topic, msgs...)
+//		if err != nil {
+//			return
+//		}
+//	}
+//}
 
 func (h *Handler) handleClose(ctx context.Context) {
 	select {
@@ -121,33 +155,19 @@ func (h *Handler) handleClose(ctx context.Context) {
 	h.stopFn()
 }
 
-func (h *Handler) getDecoratedFunc(handlerFn HandlerFunc, topic string, pub eventDriven.Publisher) HandlerFunc {
-	return func(msg *message.Message) ([]*message.Message, error) {
-		var err error
-		msgs, err := handlerFn(msg)
-		if err != nil {
-			return msgs, err
-		}
-		for _, m := range msgs {
-			err = pub.Publish(topic, m)
-			if err != nil {
-				return msgs, err
-			}
-		}
-		return msgs, nil
-	}
-}
-
-func (h *Handler) Use(ms ...HandleMiddleware) {
+func (h *Handler) AddMiddleware(ms ...HandlerMiddleware) {
 	h.middlewareLock.Lock()
 	defer h.middlewareLock.Unlock()
 	h.middleware = append(h.middleware, ms...)
 }
 
-func (h *Handler) Repost(trpostHandler *Handler, pub eventDriven.Publisher) {
-	h.publisherMapLock.Lock()
-	defer h.publisherMapLock.Unlock()
-	h.publisherMap[trpostHandler.subscriberTopic] = pub
+func (h *Handler) Forword(topic string, pub eventDriven.Publisher) {
+	h.forwardersLock.Lock()
+	defer h.forwardersLock.Unlock()
+	h.forwarders = append(h.forwarders, &Forwarder{
+		Topic:     topic,
+		Publisher: pub,
+	})
 }
 
 func (h *Handler) Stop() {
