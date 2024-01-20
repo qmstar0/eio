@@ -1,4 +1,4 @@
-package gopubsub
+package eventDriven
 
 import "github.com/google/uuid"
 

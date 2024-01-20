@@ -22,7 +22,7 @@ func Publisher(t *testing.T, pub eventDriven.Publisher, ctx context.Context) {
 		default:
 			if err := pub.Publish(
 				"pub_test",
-				message.NewMessage(gopubsub.NewUUID(), []byte("hi"))); err != nil {
+				message.NewMessage(eventDriven.NewUUID(), []byte("hi"))); err != nil {
 				t.Logf("发布时发生错误:%s", err)
 				t.Logf("context.Done(); 共计发布%d次", count)
 				return
@@ -122,9 +122,4 @@ func TestPublishers(t *testing.T) {
 
 	time.Sleep(time.Millisecond * 500)
 	wg.Wait()
-}
-func Test(t *testing.T) {
-	var str = []string{"1", "@"}
-	str = append([]string{}, str...)
-	t.Log(str)
 }

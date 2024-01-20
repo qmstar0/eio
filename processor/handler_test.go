@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	TimeOut = time.Second * 3
+	TimeOut = time.Second * 5
 )
 
 func producer(ctx context.Context, topic string, pub eventDriven.Publisher) {
@@ -41,7 +41,7 @@ func TestNewHandler(t *testing.T) {
 		return []*message.Message{msg}, nil
 	})
 
-	t.Run("test repost", func(t *testing.T) {
+	t.Run("test forward", func(t *testing.T) {
 		ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
 		defer cancle()
 
@@ -51,13 +51,13 @@ func TestNewHandler(t *testing.T) {
 			t.Log("sub", msg)
 			return []*message.Message{msg}, nil
 		})
-		handlerMain.Forword("sub", pubsub)
+		handlerMain.AddForword(processor.Forward("sub", pubsub))
 		go handlerSub.Run(ctx)
 		handlerMain.Run(ctx)
 	})
 
-	//test middleware
-	t.Run("test middleware", func(t *testing.T) {
+	//test Middleware
+	t.Run("test Middleware", func(t *testing.T) {
 		ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
 		defer cancle()
 

@@ -16,16 +16,16 @@ type Handler struct {
 	subscriberTopic string
 
 	forwarders     []*Forwarder
-	forwardersLock sync.Mutex
+	forwardersLock *sync.Mutex
 
-	//publisherMap     map[string]eventDriven.Publisher
+	//publisherMap     map[string]eventDriven.publisher
 	//publisherMapLock sync.Mutex
 
-	runningHandlersWgLock sync.Mutex
-	runningHandlersWg     sync.WaitGroup
+	runningHandlersWgLock *sync.Mutex
+	runningHandlersWg     *sync.WaitGroup
 
 	middleware     []HandlerMiddleware
-	middlewareLock sync.Mutex
+	middlewareLock *sync.Mutex
 
 	handlerFn HandlerFunc
 
@@ -42,16 +42,16 @@ func NewHandler(topic string, sub eventDriven.Subscriber, fn HandlerFunc) *Handl
 
 		handlerFn: fn,
 
-		runningHandlersWg:     sync.WaitGroup{},
-		runningHandlersWgLock: sync.Mutex{},
+		runningHandlersWg:     &sync.WaitGroup{},
+		runningHandlersWgLock: &sync.Mutex{},
 
 		middleware:     make([]HandlerMiddleware, 0),
-		middlewareLock: sync.Mutex{},
+		middlewareLock: &sync.Mutex{},
 
 		forwarders:     make([]*Forwarder, 0),
-		forwardersLock: sync.Mutex{},
+		forwardersLock: &sync.Mutex{},
 
-		//publisherMap:     make(map[string]eventDriven.Publisher),
+		//publisherMap:     make(map[string]eventDriven.publisher),
 		//publisherMapLock: sync.Mutex{},
 
 		started:   false,
@@ -59,25 +59,27 @@ func NewHandler(topic string, sub eventDriven.Subscriber, fn HandlerFunc) *Handl
 	}
 }
 
-func (h *Handler) Run(ctx context.Context) {
+func (h *Handler) Run(ctx context.Context, middlewares ...HandlerMiddleware) {
 
 	// 初始化一个空的[]HandlerMiddleware
 	// 然后依次加入
 	// - 中间件(middlewares)
 	// - 以中间件形式使用的转发中间件(getForwarderMiddlewares(h.forwarders))
-	allMiddlewares := append(append([]HandlerMiddleware(nil),
-		h.middleware...), getForwarderMiddlewares(h.forwarders)...)
+
+	allMiddlewares := append(append(append([]HandlerMiddleware(nil),
+		middlewares...), h.middleware...), getForwarderMiddlewares(h.forwarders)...)
+
+	handlerFn := h.handlerFn
 
 	//添加中间件
 	for _, middleware := range allMiddlewares {
-		handlerFn := h.handlerFn
-		h.handlerFn = middleware(handlerFn)
+		handlerFn = middleware(handlerFn)
 	}
 
 	//添加发布者
 	//for _, forwarder := range h.forwarders {
 	//	handlerFn := h.handlerFn
-	//	h.handlerFn = h.getDecoratedFunc(handlerFn, forwarder.Topic, forwarder.Publisher)
+	//	h.handlerFn = h.getDecoratedFunc(handlerFn, forwarder.topic, forwarder.publisher)
 	//}
 
 	subCtx, cancel := context.WithCancel(ctx)
@@ -100,14 +102,12 @@ func (h *Handler) Run(ctx context.Context) {
 		h.runningHandlersWg.Add(1)
 		h.runningHandlersWgLock.Unlock()
 
-		go h.handleMessage(msg, h.handlerFn)
+		go h.handleMessage(msg, handlerFn)
 	}
 
 	h.startedCh = make(chan struct{})
 	h.started = false
 	close(h.stopped)
-
-	h.runningHandlersWg.Wait()
 }
 
 func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
@@ -135,12 +135,12 @@ func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
 
 // 关于转发handler处理返回的[]*Message，有两种方法
 // 1.将返回的producedMessages循环发布(forwardMessage)
-// 2.以中间件的形式发布(Forward.middleware)
+// 2.以中间件的形式发布(Forward.Middleware)
 // 两者在实现的复杂度上差不多，但在维护的复杂度上，我认为只使用中间件这一种形式更利于阅读和扩展
 //
 //func (h *Handler) forwardMessage(msgs []*message.Message) {
 //	for _, forwarder := range h.forwarders {
-//		err := forwarder.Publisher.Publish(forwarder.Topic, msgs...)
+//		err := forwarder.publisher.Publish(forwarder.topic, msgs...)
 //		if err != nil {
 //			return
 //		}
@@ -161,13 +161,10 @@ func (h *Handler) AddMiddleware(ms ...HandlerMiddleware) {
 	h.middleware = append(h.middleware, ms...)
 }
 
-func (h *Handler) Forword(topic string, pub eventDriven.Publisher) {
+func (h *Handler) AddForword(forwarder ...*Forwarder) {
 	h.forwardersLock.Lock()
 	defer h.forwardersLock.Unlock()
-	h.forwarders = append(h.forwarders, &Forwarder{
-		Topic:     topic,
-		Publisher: pub,
-	})
+	h.forwarders = append(h.forwarders, forwarder...)
 }
 
 func (h *Handler) Stop() {
