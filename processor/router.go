@@ -30,18 +30,12 @@ func (c *RouterConfig) setDefault() {
 type Router struct {
 	config RouterConfig
 
-	//forwarders   []*Forwarder
-	//forwardsLock *sync.Mutex
-
 	handlers          map[string]*Handler
 	handlersLock      *sync.RWMutex
 	runninghandlersWg *sync.WaitGroup
 
 	middleware     []HandlerMiddleware
 	middlewareLock *sync.Mutex
-
-	//runningHandlersWg     *sync.WaitGroup
-	//runningHandlersWgLock *sync.Mutex
 
 	leastOneHandlerRunning chan struct{}
 
@@ -56,11 +50,8 @@ type Router struct {
 
 func NewRouterWithConfig(config RouterConfig) *Router {
 	config.setDefault()
-	return &Router{
+	r := &Router{
 		config: config,
-
-		//forwarders:   make([]*Forwarder, 0),
-		//forwardsLock: &sync.Mutex{},
 
 		handlers:          make(map[string]*Handler),
 		handlersLock:      &sync.RWMutex{},
@@ -68,9 +59,6 @@ func NewRouterWithConfig(config RouterConfig) *Router {
 
 		middleware:     make([]HandlerMiddleware, 0),
 		middlewareLock: &sync.Mutex{},
-
-		//runningHandlersWg:     &sync.WaitGroup{},
-		//runningHandlersWgLock: &sync.Mutex{},
 
 		leastOneHandlerRunning: make(chan struct{}),
 
@@ -82,6 +70,8 @@ func NewRouterWithConfig(config RouterConfig) *Router {
 		closedLock: sync.Mutex{},
 		closed:     false,
 	}
+	r.resetCloseState()
+	return r
 }
 
 func NewRouter() *Router {
@@ -98,8 +88,6 @@ func (r *Router) Run(c context.Context) error {
 
 	routerCtx, cancel := context.WithCancel(c)
 	defer cancel()
-
-	//fmt.Printf("%v\n", r.Middleware)
 
 	if err := r.runHandlers(routerCtx); err != nil {
 		return err
@@ -137,16 +125,13 @@ func (r *Router) runHandlers(routerCtx context.Context) error {
 			r.runninghandlersWg.Add(1)
 			defer r.runninghandlersWg.Done()
 
-			handler.Run(handlerCtx, r.middleware...)
-
 			select {
 			case r.leastOneHandlerRunning <- struct{}{}:
 			default:
 			}
 
-			//r.handlersLock.Lock()
-			//delete(r.handlers, n)
-			//r.handlersLock.Unlock()
+			handler.Run(handlerCtx, r.middleware...)
+
 		}(name, h)
 	}
 	return nil
@@ -161,9 +146,6 @@ func (r *Router) AddHandler(name, topic string, sub eventDriven.Subscriber, hand
 	}
 
 	handler := NewHandler(topic, sub, handlerFn)
-
-	//handler.runningHandlersWg = r.runningHandlersWg
-	//handler.runningHandlersWgLock = r.runningHandlersWgLock
 
 	r.handlers[name] = handler
 
@@ -190,10 +172,10 @@ func (r *Router) closeWhenAllHandlersStopped(ctx context.Context) {
 	}
 
 	r.runninghandlersWg.Wait()
-	if r.IsClosed() {
-		// already closed
-		return
-	}
+	//if r.IsClosed() {
+	//	// already closed
+	//	return
+	//}
 
 	// Only log an error if the context was not canceled, but handlers were stopped.
 	select {
@@ -214,15 +196,7 @@ func (r *Router) waitForHandlersTimeouted() bool {
 		r.runninghandlersWg.Wait()
 		close(signal)
 	}()
-	//waitGroup.Add(1)
-	//go func() {
-	//	defer waitGroup.Done()
-	//
-	//	r.runningHandlersWgLock.Lock()
-	//	defer r.runningHandlersWgLock.Unlock()
-	//
-	//	r.runningHandlersWg.Wait()
-	//}()
+
 	select {
 	case <-signal:
 		return false
