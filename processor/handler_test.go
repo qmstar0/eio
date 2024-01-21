@@ -3,7 +3,6 @@ package processor_test
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/qmstar0/eventDriven"
 	"github.com/qmstar0/eventDriven/message"
 	"github.com/qmstar0/eventDriven/processor"
@@ -22,7 +21,7 @@ func producer(ctx context.Context, topic string, pub eventDriven.Publisher) {
 		case <-ctx.Done():
 			return
 		default:
-			err := pub.Publish(topic, message.NewMessage(uuid.New().String(), []byte("hi")))
+			err := pub.Publish(topic, message.NewMessage(eventDriven.NewUUID(), []byte("hi")))
 			if err != nil {
 				fmt.Println("err", err)
 				return
