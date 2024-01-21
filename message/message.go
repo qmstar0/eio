@@ -3,7 +3,6 @@ package message
 import (
 	"bytes"
 	"context"
-	"sync"
 )
 
 var closedchan = make(chan struct{})
@@ -35,13 +34,13 @@ type Message struct {
 	// Payload is the message's payload.
 	Payload Payload
 
-	// ack is closed, when acknowledge is received.
-	ack chan struct{}
-	// noACk is closed, when negative acknowledge is received.
-	noAck chan struct{}
+	//// ack is closed, when acknowledge is received.
+	//ack chan struct{}
+	////noACk is closed, when negative acknowledge is received.
+	//noAck chan struct{}
 
-	ackMutex    sync.Mutex
-	ackSentType ackType
+	//ackMutex    sync.Mutex
+	//ackSentType ackType
 
 	ctx context.Context
 }
@@ -52,18 +51,18 @@ func NewMessage(uuid string, payload Payload) *Message {
 		UUID:     uuid,
 		Metadata: make(map[string]string),
 		Payload:  payload,
-		ack:      make(chan struct{}),
-		noAck:    make(chan struct{}),
+		//ack:      make(chan struct{}),
+		//noAck:    make(chan struct{}),
 	}
 }
 
-type ackType int
-
-const (
-	noAckSent ackType = iota
-	ack
-	nack
-)
+//type ackType int
+//
+//const (
+//	noAckSent ackType = iota
+//	ack
+//	nack
+//)
 
 // Equals compare, that two messages are equal. Acks/Nacks are not compared.
 func (m *Message) Equals(toCompare *Message) bool {
@@ -86,53 +85,53 @@ func (m *Message) Equals(toCompare *Message) bool {
 // Ack is not blocking.
 // Ack is idempotent.
 // False is returned, if Nack is already sent.
-func (m *Message) Ack() bool {
-	m.ackMutex.Lock()
-	defer m.ackMutex.Unlock()
-
-	if m.ackSentType == nack {
-		return false
-	}
-	if m.ackSentType != noAckSent {
-		return true
-	}
-
-	m.ackSentType = ack
-	if m.ack == nil {
-		m.ack = closedchan
-	} else {
-		close(m.ack)
-	}
-
-	return true
-}
+//func (m *Message) Ack() bool {
+//	m.ackMutex.Lock()
+//	defer m.ackMutex.Unlock()
+//
+//	if m.ackSentType == nack {
+//		return false
+//	}
+//	if m.ackSentType != noAckSent {
+//		return true
+//	}
+//
+//	m.ackSentType = ack
+//	if m.ack == nil {
+//		m.ack = closedchan
+//	} else {
+//		close(m.ack)
+//	}
+//
+//	return true
+//}
 
 // Nack sends message's negative acknowledgement.
 //
 // Nack is not blocking.
 // Nack is idempotent.
 // False is returned, if Ack is already sent.
-func (m *Message) Nack() bool {
-	m.ackMutex.Lock()
-	defer m.ackMutex.Unlock()
-
-	if m.ackSentType == ack {
-		return false
-	}
-	if m.ackSentType != noAckSent {
-		return true
-	}
-
-	m.ackSentType = nack
-
-	if m.noAck == nil {
-		m.noAck = closedchan
-	} else {
-		close(m.noAck)
-	}
-
-	return true
-}
+//func (m *Message) Nack() bool {
+//	m.ackMutex.Lock()
+//	defer m.ackMutex.Unlock()
+//
+//	if m.ackSentType == ack {
+//		return false
+//	}
+//	if m.ackSentType != noAckSent {
+//		return true
+//	}
+//
+//	m.ackSentType = nack
+//
+//	if m.noAck == nil {
+//		m.noAck = closedchan
+//	} else {
+//		close(m.noAck)
+//	}
+//
+//	return true
+//}
 
 // Acked returns channel which is closed when acknowledgement is sent.
 //
@@ -144,9 +143,9 @@ func (m *Message) Nack() bool {
 //	case <-message.Nacked():
 //		// nack received
 //	}
-func (m *Message) Acked() <-chan struct{} {
-	return m.ack
-}
+//func (m *Message) Acked() <-chan struct{} {
+//	return m.ack
+//}
 
 // Nacked returns channel which is closed when negative acknowledgement is sent.
 //
@@ -158,9 +157,9 @@ func (m *Message) Acked() <-chan struct{} {
 //	case <-message.Nacked():
 //		// nack received
 //	}
-func (m *Message) Nacked() <-chan struct{} {
-	return m.noAck
-}
+//func (m *Message) Nacked() <-chan struct{} {
+//	return m.noAck
+//}
 
 // Context returns the message's context. To change the context, use
 // SetContext.

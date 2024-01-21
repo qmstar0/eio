@@ -33,15 +33,15 @@ type Router struct {
 	//forwarders   []*Forwarder
 	//forwardsLock *sync.Mutex
 
-	handlers     map[string]*Handler
-	handlersLock *sync.RWMutex
-	handlersWg   *sync.WaitGroup
+	handlers          map[string]*Handler
+	handlersLock      *sync.RWMutex
+	runninghandlersWg *sync.WaitGroup
 
 	middleware     []HandlerMiddleware
 	middlewareLock *sync.Mutex
 
-	runningHandlersWg     *sync.WaitGroup
-	runningHandlersWgLock *sync.Mutex
+	//runningHandlersWg     *sync.WaitGroup
+	//runningHandlersWgLock *sync.Mutex
 
 	leastOneHandlerRunning chan struct{}
 
@@ -55,21 +55,22 @@ type Router struct {
 }
 
 func NewRouterWithConfig(config RouterConfig) *Router {
+	config.setDefault()
 	return &Router{
 		config: config,
 
 		//forwarders:   make([]*Forwarder, 0),
 		//forwardsLock: &sync.Mutex{},
 
-		handlers:     make(map[string]*Handler),
-		handlersLock: &sync.RWMutex{},
-		handlersWg:   &sync.WaitGroup{},
+		handlers:          make(map[string]*Handler),
+		handlersLock:      &sync.RWMutex{},
+		runninghandlersWg: &sync.WaitGroup{},
 
 		middleware:     make([]HandlerMiddleware, 0),
 		middlewareLock: &sync.Mutex{},
 
-		runningHandlersWg:     &sync.WaitGroup{},
-		runningHandlersWgLock: &sync.Mutex{},
+		//runningHandlersWg:     &sync.WaitGroup{},
+		//runningHandlersWgLock: &sync.Mutex{},
 
 		leastOneHandlerRunning: make(chan struct{}),
 
@@ -133,8 +134,8 @@ func (r *Router) runHandlers(routerCtx context.Context) error {
 		go func(n string, handler *Handler) {
 			defer cancel()
 
-			r.handlersWg.Add(1)
-			defer r.handlersWg.Done()
+			r.runninghandlersWg.Add(1)
+			defer r.runninghandlersWg.Done()
 
 			handler.Run(handlerCtx, r.middleware...)
 
@@ -161,8 +162,8 @@ func (r *Router) AddHandler(name, topic string, sub eventDriven.Subscriber, hand
 
 	handler := NewHandler(topic, sub, handlerFn)
 
-	handler.runningHandlersWg = r.runningHandlersWg
-	handler.runningHandlersWgLock = r.runningHandlersWgLock
+	//handler.runningHandlersWg = r.runningHandlersWg
+	//handler.runningHandlersWgLock = r.runningHandlersWgLock
 
 	r.handlers[name] = handler
 
@@ -188,7 +189,7 @@ func (r *Router) closeWhenAllHandlersStopped(ctx context.Context) {
 		}
 	}
 
-	r.handlersWg.Wait()
+	r.runninghandlersWg.Wait()
 	if r.IsClosed() {
 		// already closed
 		return
@@ -207,23 +208,27 @@ func (r *Router) closeWhenAllHandlersStopped(ctx context.Context) {
 	}
 }
 
-func (r *Router) waitForHandlers() bool {
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(1)
+func (r *Router) waitForHandlersTimeouted() bool {
+	signal := make(chan struct{})
 	go func() {
-		defer waitGroup.Done()
-		r.handlersWg.Wait()
+		r.runninghandlersWg.Wait()
+		close(signal)
 	}()
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-
-		r.runningHandlersWgLock.Lock()
-		defer r.runningHandlersWgLock.Unlock()
-
-		r.runningHandlersWg.Wait()
-	}()
-	return WaitGroupTimeout(&waitGroup, r.config.CloseTimeout)
+	//waitGroup.Add(1)
+	//go func() {
+	//	defer waitGroup.Done()
+	//
+	//	r.runningHandlersWgLock.Lock()
+	//	defer r.runningHandlersWgLock.Unlock()
+	//
+	//	r.runningHandlersWg.Wait()
+	//}()
+	select {
+	case <-signal:
+		return false
+	case <-time.After(r.config.CloseTimeout):
+		return true
+	}
 }
 
 func (r *Router) Running() <-chan struct{} {
@@ -262,7 +267,7 @@ func (r *Router) Close() error {
 	close(r.closingCh)
 	defer close(r.closedCh)
 
-	timeouted := r.waitForHandlers()
+	timeouted := r.waitForHandlersTimeouted()
 	if timeouted {
 		return errors.New("router close timeout")
 	}

@@ -86,7 +86,8 @@ func Test(t *testing.T) {
 
 		time.Sleep(time.Second * 2)
 
-		router.Close()
+		err := router.Close()
+		assert.NoError(t, err)
 
 		assert.False(t, router.IsRunning())
 		assert.True(t, router.IsClosed())

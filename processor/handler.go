@@ -108,6 +108,8 @@ func (h *Handler) Run(ctx context.Context, middlewares ...HandlerMiddleware) {
 	h.startedCh = make(chan struct{})
 	h.started = false
 	close(h.stopped)
+
+	h.runningHandlersWg.Wait()
 }
 
 func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
@@ -115,14 +117,14 @@ func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
 
 	defer func() {
 		if recovered := recover(); recovered != nil {
-			msg.Nack()
+			//msg.Nack()
 		}
 	}()
 
 	//producedMessages, err := handlerFn(msg)
 	_, err := handlerFn(msg)
 	if err != nil {
-		msg.Nack()
+		//msg.Nack()
 		return
 	}
 
@@ -130,7 +132,7 @@ func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
 	//	h.forwardMessage(producedMessages)
 	//}
 
-	msg.Ack()
+	//msg.Ack()
 }
 
 // 关于转发handler处理返回的[]*Message，有两种方法
