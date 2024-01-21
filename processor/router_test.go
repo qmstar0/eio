@@ -35,7 +35,7 @@ func publishMessage(t *testing.T, ctx context.Context, topic string, publisher e
 
 func Test(t *testing.T) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), TimeOut)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 
 	pub, sub := createPubSub()
@@ -77,8 +77,6 @@ func Test(t *testing.T) {
 
 	go publishMessage(t, ctx, "main", pub)
 
-	reRun := make(chan struct{})
-
 	go func() {
 		<-router.Running()
 		assert.True(t, router.IsRunning())
@@ -96,16 +94,73 @@ func Test(t *testing.T) {
 		case <-router.Running():
 			panic("关闭后的router`<-router.Running()`仍在运行")
 		default:
-			close(reRun)
+
 		}
 
 	}()
 
 	err := router.Run(ctx)
 	assert.NoError(t, err)
-	<-reRun
+
 	t.Log("重新运行")
 	time.Sleep(time.Second)
+
 	err = router.Run(ctx)
+	assert.NoError(t, err)
+}
+
+func TestRouterCloseTimeout(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	pub, sub := createPubSub()
+	router := processor.NewRouterWithConfig(processor.RouterConfig{CloseTimeout: time.Second * 2})
+
+	router.AddHandler("1", "main", sub, func(msg *message.Message) ([]*message.Message, error) {
+		t.Log("main", msg)
+		// 每个handler阻塞5秒
+		time.Sleep(time.Second * 5)
+		return nil, nil
+	})
+
+	go producer(ctx, "main", pub)
+
+	go func() {
+		err := router.Run(ctx)
+		assert.NoError(t, err)
+	}()
+
+	// 运行两秒后关闭router
+	time.Sleep(time.Second * 2)
+
+	err := router.Close()
+	assert.Error(t, err)
+}
+
+func TestRouterRuntimeHandlerStep(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	pub, sub := createPubSub()
+	router := processor.NewRouterWithConfig(processor.RouterConfig{CloseTimeout: time.Second * 2})
+
+	handler := router.AddHandler("1", "main", sub, func(msg *message.Message) ([]*message.Message, error) {
+		t.Log("main", msg)
+		// 每个handler阻塞3秒
+		time.Sleep(time.Second * 3)
+		return nil, nil
+	})
+
+	go producer(ctx, "main", pub)
+
+	//测试当router中的handler停止后，router是否正常关闭
+	go func() {
+
+		time.Sleep(time.Second * 4)
+		handler.Stop()
+		t.Log("handler stoped")
+	}()
+
+	err := router.Run(ctx)
 	assert.NoError(t, err)
 }
