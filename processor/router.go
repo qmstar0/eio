@@ -3,7 +3,7 @@ package processor
 import (
 	"context"
 	"errors"
-	"github.com/qmstar0/eventDriven"
+	"github.com/qmstar0/eio"
 	"sync"
 	"time"
 )
@@ -137,7 +137,7 @@ func (r *Router) runHandlers(routerCtx context.Context) error {
 	return nil
 }
 
-func (r *Router) AddHandler(name, topic string, sub eventDriven.Subscriber, handlerFn HandlerFunc) Route {
+func (r *Router) AddHandler(name, topic string, sub eio.Subscriber, handlerFn HandlerFunc) Route {
 	r.handlersLock.Lock()
 	defer r.handlersLock.Unlock()
 

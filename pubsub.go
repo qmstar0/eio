@@ -1,8 +1,8 @@
-package eventDriven
+package eio
 
 import (
 	"context"
-	"github.com/qmstar0/eventDriven/message"
+	"github.com/qmstar0/eio/message"
 )
 
 type Publisher interface {

@@ -2,8 +2,8 @@ package processor
 
 import (
 	"context"
-	"github.com/qmstar0/eventDriven"
-	"github.com/qmstar0/eventDriven/message"
+	"github.com/qmstar0/eio"
+	"github.com/qmstar0/eio/message"
 	"sync"
 )
 
@@ -12,13 +12,13 @@ type HandlerFunc func(msg *message.Message) ([]*message.Message, error)
 type HandlerMiddleware func(fn HandlerFunc) HandlerFunc
 
 type Handler struct {
-	subscriber      eventDriven.Subscriber
+	subscriber      eio.Subscriber
 	subscriberTopic string
 
 	forwarders     []Forwarder
 	forwardersLock *sync.Mutex
 
-	//publisherMap     map[string]eventDriven.publisher
+	//publisherMap     map[string]eio.publisher
 	//publisherMapLock sync.Mutex
 
 	runningHandlersWgLock *sync.Mutex
@@ -35,7 +35,7 @@ type Handler struct {
 	stopFn    context.CancelFunc
 }
 
-func NewHandler(topic string, sub eventDriven.Subscriber, fn HandlerFunc) *Handler {
+func NewHandler(topic string, sub eio.Subscriber, fn HandlerFunc) *Handler {
 	return &Handler{
 		subscriber:      sub,
 		subscriberTopic: topic,
@@ -51,7 +51,7 @@ func NewHandler(topic string, sub eventDriven.Subscriber, fn HandlerFunc) *Handl
 		forwarders:     make([]Forwarder, 0),
 		forwardersLock: &sync.Mutex{},
 
-		//publisherMap:     make(map[string]eventDriven.publisher),
+		//publisherMap:     make(map[string]eio.publisher),
 		//publisherMapLock: sync.Mutex{},
 
 		started:   false,

@@ -1,4 +1,4 @@
-package eventDriven
+package eio
 
 import "github.com/google/uuid"
 

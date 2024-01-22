@@ -2,9 +2,9 @@ package gopubsub_test
 
 import (
 	"context"
-	"github.com/qmstar0/eventDriven"
-	"github.com/qmstar0/eventDriven/message"
-	"github.com/qmstar0/eventDriven/pubsub/gopubsub"
+	"github.com/qmstar0/eio"
+	"github.com/qmstar0/eio/message"
+	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"sync"
 	"testing"
 	"time"
@@ -12,7 +12,7 @@ import (
 
 var TestRunDuration = time.Second * 3
 
-func Publisher(t *testing.T, pub eventDriven.Publisher, ctx context.Context) {
+func Publisher(t *testing.T, pub eio.Publisher, ctx context.Context) {
 	var count = 0
 	for {
 		select {
@@ -22,7 +22,7 @@ func Publisher(t *testing.T, pub eventDriven.Publisher, ctx context.Context) {
 		default:
 			if err := pub.Publish(
 				"pub_test",
-				message.NewMessage(eventDriven.NewUUID(), []byte("hi"))); err != nil {
+				message.NewMessage(eio.NewUUID(), []byte("hi"))); err != nil {
 				t.Logf("发布时发生错误:%s", err)
 				t.Logf("context.Done(); 共计发布%d次", count)
 				return

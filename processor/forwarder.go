@@ -1,16 +1,16 @@
 package processor
 
 import (
-	"github.com/qmstar0/eventDriven"
-	"github.com/qmstar0/eventDriven/message"
+	"github.com/qmstar0/eio"
+	"github.com/qmstar0/eio/message"
 )
 
 type Forwarder struct {
 	topic     string
-	publisher eventDriven.Publisher
+	publisher eio.Publisher
 }
 
-func Forward(topic string, pub eventDriven.Publisher) Forwarder {
+func Forward(topic string, pub eio.Publisher) Forwarder {
 	return Forwarder{
 		topic:     topic,
 		publisher: pub,

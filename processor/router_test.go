@@ -2,16 +2,16 @@ package processor_test
 
 import (
 	"context"
-	"github.com/qmstar0/eventDriven"
-	"github.com/qmstar0/eventDriven/message"
-	"github.com/qmstar0/eventDriven/processor"
-	"github.com/qmstar0/eventDriven/pubsub/gopubsub"
+	"github.com/qmstar0/eio"
+	"github.com/qmstar0/eio/message"
+	"github.com/qmstar0/eio/processor"
+	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
-func createPubSub() (eventDriven.Publisher, eventDriven.Subscriber) {
+func createPubSub() (eio.Publisher, eio.Subscriber) {
 	pubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
 	return pubsub, pubsub
 }
@@ -20,13 +20,13 @@ func createRouter() *processor.Router {
 	return processor.NewRouter()
 }
 
-func publishMessage(t *testing.T, ctx context.Context, topic string, publisher eventDriven.Publisher) {
+func publishMessage(t *testing.T, ctx context.Context, topic string, publisher eio.Publisher) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			err := publisher.Publish(topic, message.NewMessage(eventDriven.NewUUID(), []byte("hi")))
+			err := publisher.Publish(topic, message.NewMessage(eio.NewUUID(), []byte("hi")))
 			assert.NoError(t, err)
 			time.Sleep(time.Millisecond * 200)
 		}

@@ -3,10 +3,10 @@ package processor_test
 import (
 	"context"
 	"fmt"
-	"github.com/qmstar0/eventDriven"
-	"github.com/qmstar0/eventDriven/message"
-	"github.com/qmstar0/eventDriven/processor"
-	"github.com/qmstar0/eventDriven/pubsub/gopubsub"
+	"github.com/qmstar0/eio"
+	"github.com/qmstar0/eio/message"
+	"github.com/qmstar0/eio/processor"
+	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"testing"
 	"time"
 )
@@ -15,13 +15,13 @@ var (
 	TimeOut = time.Second * 5
 )
 
-func producer(ctx context.Context, topic string, pub eventDriven.Publisher) {
+func producer(ctx context.Context, topic string, pub eio.Publisher) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			err := pub.Publish(topic, message.NewMessage(eventDriven.NewUUID(), []byte("hi")))
+			err := pub.Publish(topic, message.NewMessage(eio.NewUUID(), []byte("hi")))
 			if err != nil {
 				fmt.Println("err", err)
 				return
