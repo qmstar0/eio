@@ -10,8 +10,8 @@ type Forwarder struct {
 	publisher eventDriven.Publisher
 }
 
-func Forward(topic string, pub eventDriven.Publisher) *Forwarder {
-	return &Forwarder{
+func Forward(topic string, pub eventDriven.Publisher) Forwarder {
+	return Forwarder{
 		topic:     topic,
 		publisher: pub,
 	}
@@ -30,7 +30,7 @@ func (f *Forwarder) Middleware(fn HandlerFunc) HandlerFunc {
 	}
 }
 
-func getForwarderMiddlewares(forwarders []*Forwarder) []HandlerMiddleware {
+func getForwarderMiddlewares(forwarders []Forwarder) []HandlerMiddleware {
 	result := make([]HandlerMiddleware, len(forwarders))
 	for i, forwarder := range forwarders {
 		result[i] = forwarder.Middleware

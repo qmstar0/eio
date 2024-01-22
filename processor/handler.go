@@ -15,7 +15,7 @@ type Handler struct {
 	subscriber      eventDriven.Subscriber
 	subscriberTopic string
 
-	forwarders     []*Forwarder
+	forwarders     []Forwarder
 	forwardersLock *sync.Mutex
 
 	//publisherMap     map[string]eventDriven.publisher
@@ -48,7 +48,7 @@ func NewHandler(topic string, sub eventDriven.Subscriber, fn HandlerFunc) *Handl
 		middleware:     make([]HandlerMiddleware, 0),
 		middlewareLock: &sync.Mutex{},
 
-		forwarders:     make([]*Forwarder, 0),
+		forwarders:     make([]Forwarder, 0),
 		forwardersLock: &sync.Mutex{},
 
 		//publisherMap:     make(map[string]eventDriven.publisher),
@@ -163,7 +163,7 @@ func (h *Handler) AddMiddleware(ms ...HandlerMiddleware) {
 	h.middleware = append(h.middleware, ms...)
 }
 
-func (h *Handler) AddForword(forwarder ...*Forwarder) {
+func (h *Handler) AddForword(forwarder ...Forwarder) {
 	h.forwardersLock.Lock()
 	defer h.forwardersLock.Unlock()
 	h.forwarders = append(h.forwarders, forwarder...)
