@@ -18,7 +18,7 @@ func Forward(topic string, pub eio.Publisher) Forwarder {
 }
 
 func (f *Forwarder) Middleware(fn HandlerFunc) HandlerFunc {
-	return func(msg *message.Message) ([]*message.Message, error) {
+	return func(msg *message.Context) ([]*message.Context, error) {
 		messages, err := fn(msg)
 		if err != nil {
 			return messages, err
