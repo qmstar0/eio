@@ -26,7 +26,7 @@ func publishMessage(t *testing.T, ctx context.Context, topic string, publisher e
 		case <-ctx.Done():
 			return
 		default:
-			err := publisher.Publish(topic, message.NewMessage(eio.NewUUID(), []byte("hi")))
+			err := publisher.Publish(topic, message.WithPayload(eio.NewUUID(), []byte("hi")))
 			assert.NoError(t, err)
 			time.Sleep(time.Millisecond * 200)
 		}
@@ -41,18 +41,18 @@ func Test(t *testing.T) {
 	pub, sub := createPubSub()
 	router := createRouter()
 
-	handler := router.AddHandler("1", "main", sub, func(msg *message.Message) ([]*message.Message, error) {
-		t.Log("handler-main", msg)
-		return []*message.Message{msg}, nil
+	handler := router.AddHandler("1", "main", sub, func(msgCtx *message.Context) ([]*message.Context, error) {
+		t.Log("handler-main", msgCtx)
+		return []*message.Context{msgCtx}, nil
 	})
 
-	router.AddHandler("2", "sub", sub, func(msg *message.Message) ([]*message.Message, error) {
-		t.Log("handler-sub", msg)
-		return []*message.Message{msg}, nil
+	router.AddHandler("2", "sub", sub, func(msgCtx *message.Context) ([]*message.Context, error) {
+		t.Log("handler-sub", msgCtx)
+		return []*message.Context{msgCtx}, nil
 	})
 
 	router.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {
-		return func(msg *message.Message) ([]*message.Message, error) {
+		return func(msg *message.Context) ([]*message.Context, error) {
 			t.Log("router-middleware 在handler前")
 			messages, err := fn(msg)
 			assert.NoError(t, err)
@@ -63,7 +63,7 @@ func Test(t *testing.T) {
 	})
 
 	handler.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {
-		return func(msg *message.Message) ([]*message.Message, error) {
+		return func(msg *message.Context) ([]*message.Context, error) {
 			t.Log("handler-middleware 在handler前", msg)
 			messages, err := fn(msg)
 			assert.NoError(t, err)
@@ -116,7 +116,7 @@ func TestRouterCloseTimeout(t *testing.T) {
 	pub, sub := createPubSub()
 	router := processor.NewRouterWithConfig(processor.RouterConfig{CloseTimeout: time.Second * 2})
 
-	router.AddHandler("1", "main", sub, func(msg *message.Message) ([]*message.Message, error) {
+	router.AddHandler("1", "main", sub, func(msg *message.Context) ([]*message.Context, error) {
 		t.Log("main", msg)
 		// 每个handler阻塞5秒
 		time.Sleep(time.Second * 5)
@@ -144,7 +144,7 @@ func TestRouterRuntimeHandlerStep(t *testing.T) {
 	pub, sub := createPubSub()
 	router := processor.NewRouterWithConfig(processor.RouterConfig{CloseTimeout: time.Second * 2})
 
-	handler := router.AddHandler("1", "main", sub, func(msg *message.Message) ([]*message.Message, error) {
+	handler := router.AddHandler("1", "main", sub, func(msg *message.Context) ([]*message.Context, error) {
 		t.Log("main", msg)
 		// 每个handler阻塞3秒
 		time.Sleep(time.Second * 3)

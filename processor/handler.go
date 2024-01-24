@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-type HandlerFunc func(msg *message.Message) ([]*message.Message, error)
+type HandlerFunc func(msg *message.Context) ([]*message.Context, error)
 
 type HandlerMiddleware func(fn HandlerFunc) HandlerFunc
 
@@ -112,7 +112,7 @@ func (h *Handler) Run(ctx context.Context, middlewares ...HandlerMiddleware) {
 	h.runningHandlersWg.Wait()
 }
 
-func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
+func (h *Handler) handleMessage(msg *message.Context, handlerFn HandlerFunc) {
 	defer h.runningHandlersWg.Done()
 
 	defer func() {
@@ -140,7 +140,7 @@ func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
 // 2.以中间件的形式发布(Forward.Middleware)
 // 两者在实现的复杂度上差不多，但在维护的复杂度上，我认为只使用中间件这一种形式更利于阅读和扩展
 //
-//func (h *Handler) forwardMessage(msgs []*message.Message) {
+//func (h *Header) forwardMessage(msgs []*message.Message) {
 //	for _, forwarder := range h.forwarders {
 //		err := forwarder.publisher.Publish(forwarder.topic, msgs...)
 //		if err != nil {
