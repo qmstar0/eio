@@ -1,4 +1,14 @@
-# Official Release of eio!
+# Version update record
+
+## v1.1.0
+
+The structure of messages has undergone a redesign, transitioning from the original concept of a 'message with context' to a 'context with message.'
+
+## v1.0.1
+
+Solve the problem that the eio package is not synchronized to pkg.go.dev
+
+# Official Release of eio! (v1.0.0)
 
 Hello everyone!
 
