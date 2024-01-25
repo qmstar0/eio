@@ -1,4 +1,9 @@
-# Official Release of eio!
+
+## v1.0.1
+
+Solve the problem that the eio package is not synchronized to pkg.go.dev
+
+# Official Release of eio! (v1.0.0)
 
 Hello everyone!
 
