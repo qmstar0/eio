@@ -1,5 +1,9 @@
 # Version update record
 
+## v1.1.1
+
+Now you can modify the ctx inside message.Context through SetContext.
+
 ## v1.1.0
 
 The structure of messages has undergone a redesign, transitioning from the original concept of a 'message with context' to a 'context with message.'
