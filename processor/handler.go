@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"fmt"
 	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
 	"sync"
@@ -17,9 +18,6 @@ type Handler struct {
 
 	forwarders     []Forwarder
 	forwardersLock *sync.Mutex
-
-	//publisherMap     map[string]eio.publisher
-	//publisherMapLock sync.Mutex
 
 	runningHandlersWgLock *sync.Mutex
 	runningHandlersWg     *sync.WaitGroup
@@ -117,37 +115,18 @@ func (h *Handler) handleMessage(msg *message.Context, handlerFn HandlerFunc) {
 
 	defer func() {
 		if recovered := recover(); recovered != nil {
-			//msg.Nack()
+			msg.Nack(recoverErr{recovered})
 		}
 	}()
 
-	//producedMessages, err := handlerFn(msg)
 	_, err := handlerFn(msg)
 	if err != nil {
-		//msg.Nack()
+		msg.Nack(err)
 		return
 	}
 
-	//if len(producedMessages) != 0 {
-	//	h.forwardMessage(producedMessages)
-	//}
-
-	//msg.Ack()
+	msg.Ack()
 }
-
-// 关于转发handler处理返回的[]*Message，有两种方法
-// 1.将返回的producedMessages循环发布(forwardMessage)
-// 2.以中间件的形式发布(Forward.Middleware)
-// 两者在实现的复杂度上差不多，但在维护的复杂度上，我认为只使用中间件这一种形式更利于阅读和扩展
-//
-//func (h *Header) forwardMessage(msgs []*message.Message) {
-//	for _, forwarder := range h.forwarders {
-//		err := forwarder.publisher.Publish(forwarder.topic, msgs...)
-//		if err != nil {
-//			return
-//		}
-//	}
-//}
 
 func (h *Handler) handleClose(ctx context.Context) {
 	select {
@@ -182,4 +161,12 @@ func (h *Handler) Stopped() chan struct{} {
 
 func (h *Handler) Started() chan struct{} {
 	return h.startedCh
+}
+
+type recoverErr struct {
+	message any
+}
+
+func (r recoverErr) Error() string {
+	return fmt.Sprintf("recovered from panic:%s", r.message)
 }
