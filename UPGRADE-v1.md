@@ -1,5 +1,9 @@
 # Version update record
 
+## v1.1.2
+
+Improve the message processing mechanism: after processing the message, the context will be automatically ended based on the processing situation.
+
 ## v1.1.1
 
 Now you can modify the ctx inside message.Context through SetContext.
