@@ -2,12 +2,13 @@ package processor
 
 import (
 	"context"
+	"fmt"
 	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
 	"sync"
 )
 
-type HandlerFunc func(msg *message.Message) ([]*message.Message, error)
+type HandlerFunc func(msg *message.Context) ([]*message.Context, error)
 
 type HandlerMiddleware func(fn HandlerFunc) HandlerFunc
 
@@ -17,9 +18,6 @@ type Handler struct {
 
 	forwarders     []Forwarder
 	forwardersLock *sync.Mutex
-
-	//publisherMap     map[string]eio.publisher
-	//publisherMapLock sync.Mutex
 
 	runningHandlersWgLock *sync.Mutex
 	runningHandlersWg     *sync.WaitGroup
@@ -112,27 +110,22 @@ func (h *Handler) Run(ctx context.Context, middlewares ...HandlerMiddleware) {
 	h.runningHandlersWg.Wait()
 }
 
-func (h *Handler) handleMessage(msg *message.Message, handlerFn HandlerFunc) {
+func (h *Handler) handleMessage(msg *message.Context, handlerFn HandlerFunc) {
 	defer h.runningHandlersWg.Done()
 
 	defer func() {
 		if recovered := recover(); recovered != nil {
-			//msg.Nack()
+			msg.Nack(recoverErr{recovered})
 		}
 	}()
 
-	//producedMessages, err := handlerFn(msg)
 	_, err := handlerFn(msg)
 	if err != nil {
-		//msg.Nack()
+		msg.Nack(err)
 		return
 	}
 
-	//if len(producedMessages) != 0 {
-	//	h.forwardMessage(producedMessages)
-	//}
-
-	//msg.Ack()
+	msg.Ack()
 }
 
 func (h *Handler) handleClose(ctx context.Context) {
@@ -168,4 +161,12 @@ func (h *Handler) Stopped() chan struct{} {
 
 func (h *Handler) Started() chan struct{} {
 	return h.startedCh
+}
+
+type recoverErr struct {
+	message any
+}
+
+func (r recoverErr) Error() string {
+	return fmt.Sprintf("recovered from panic:%s", r.message)
 }

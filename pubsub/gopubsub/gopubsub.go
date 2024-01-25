@@ -42,14 +42,9 @@ func (g *GoPubsub) Name() string {
 	return g.name
 }
 
-func (g *GoPubsub) Publish(topic string, messages ...*message.Message) error {
+func (g *GoPubsub) Publish(topic string, messageCtxs ...*message.Context) error {
 	if g.isClosed() {
 		return errors.New("Pub/Sub closed")
-	}
-
-	messagesCopy := make([]*message.Message, len(messages))
-	for i, msg := range messages {
-		messagesCopy[i] = msg.Copy()
 	}
 
 	g.subscribersLock.RLock()
@@ -59,8 +54,8 @@ func (g *GoPubsub) Publish(topic string, messages ...*message.Message) error {
 	topicMutex.(*sync.Mutex).Lock()
 	defer topicMutex.(*sync.Mutex).Unlock()
 
-	for i := range messagesCopy {
-		msg := messagesCopy[i]
+	for i := range messageCtxs {
+		msg := messageCtxs[i]
 
 		g.sendMessage(topic, msg)
 
@@ -69,7 +64,7 @@ func (g *GoPubsub) Publish(topic string, messages ...*message.Message) error {
 	return nil
 }
 
-func (g *GoPubsub) sendMessage(topic string, message *message.Message) {
+func (g *GoPubsub) sendMessage(topic string, message *message.Context) {
 	subscribers := g.getSubscribersByTopic(topic)
 
 	if len(subscribers) == 0 {
@@ -87,7 +82,7 @@ func (g *GoPubsub) sendMessage(topic string, message *message.Message) {
 	//wg.Wait()
 }
 
-func (g *GoPubsub) Subscribe(ctx context.Context, topic string) (<-chan *message.Message, error) {
+func (g *GoPubsub) Subscribe(ctx context.Context, topic string) (<-chan *message.Context, error) {
 	g.closedLock.Lock()
 
 	if g.closed {
@@ -105,7 +100,7 @@ func (g *GoPubsub) Subscribe(ctx context.Context, topic string) (<-chan *message
 
 	s := &subscriber{
 		ctx:           ctx,
-		messageCh:     make(chan *message.Message, g.config.MessageChannelBuffer),
+		messageCh:     make(chan *message.Context, g.config.MessageChannelBuffer),
 		messageChLock: sync.Mutex{},
 
 		closed:  false,

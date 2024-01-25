@@ -22,7 +22,7 @@ func Publisher(t *testing.T, pub eio.Publisher, ctx context.Context) {
 		default:
 			if err := pub.Publish(
 				"pub_test",
-				message.NewMessage(eio.NewUUID(), []byte("hi"))); err != nil {
+				message.WithPayload(eio.NewUUID(), []byte("hi"))); err != nil {
 				t.Logf("发布时发生错误:%s", err)
 				t.Logf("context.Done(); 共计发布%d次", count)
 				return
