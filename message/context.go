@@ -42,6 +42,10 @@ func (c *Context) WithValue(k, v any) *Context {
 	return c
 }
 
+func (c *Context) SetContext(ctx context.Context) {
+	c.ctx, c.cancel = context.WithCancelCause(ctx)
+}
+
 func (c *Context) Context() context.Context {
 	return c.ctx
 }
