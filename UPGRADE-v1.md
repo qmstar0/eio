@@ -1,22 +1,3 @@
-# Version update record
-
-## v1.1.3
-
-Fix logic bugs in `SetContext()` and `Context()`
-
-Improve the test of `message.Context`
-
-## v1.1.2
-
-Improve the message processing mechanism: after processing the message, the context will be automatically ended based on the processing situation.
-
-## v1.1.1
-
-Now you can modify the ctx inside message.Context through SetContext.
-
-## v1.1.0
-
-The structure of messages has undergone a redesign, transitioning from the original concept of a 'message with context' to a 'context with message.'
 
 ## v1.0.1
 
