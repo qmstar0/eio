@@ -36,18 +36,17 @@ func (c *Context) Nack(err error) bool {
 	}
 }
 
-func (c *Context) WithValue(k, v any) *Context {
-	ctx := context.WithValue(c.ctx, k, v)
-	c.ctx = ctx
-	return c
+func (c *Context) SetValue(k, v any) {
+	c.ctx = context.WithValue(c.ctx, k, v)
 }
 
 func (c *Context) SetContext(ctx context.Context) {
-	c.ctx, c.cancel = context.WithCancelCause(ctx)
+	value := context.WithValue(ctx, setCtxKey, ctx)
+	c.ctx, c.cancel = context.WithCancelCause(value)
 }
 
 func (c *Context) Context() context.Context {
-	return c.ctx
+	return c.ctx.Value(setCtxKey).(context.Context)
 }
 
 // 为Context实现context.Context接口
