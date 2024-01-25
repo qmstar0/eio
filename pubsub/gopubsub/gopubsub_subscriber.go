@@ -33,14 +33,8 @@ func (s *subscriber) sendMessageToMessageChannel(msg *message.Message) {
 	s.messageChLock.Lock()
 	defer s.messageChLock.Unlock()
 
-	ctx, cancel := context.WithCancel(s.ctx)
-	defer cancel()
-
-	msgCopy := msg.Copy()
-	msgCopy.SetContext(ctx)
-
 	select {
-	case s.messageCh <- msgCopy:
+	case s.messageCh <- msg.Copy():
 	case <-s.closing:
 		return
 	}
