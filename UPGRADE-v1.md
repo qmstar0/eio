@@ -1,5 +1,11 @@
 # Version update record
 
+## v1.1.3
+
+Fix logic bugs in `SetContext()` and `Context()`
+
+Improve the test of `message.Context`
+
 ## v1.1.2
 
 Improve the message processing mechanism: after processing the message, the context will be automatically ended based on the processing situation.
