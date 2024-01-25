@@ -31,61 +31,88 @@ func producer(ctx context.Context, topic string, pub eio.Publisher) {
 	}
 }
 
-func TestNewHandler(t *testing.T) {
+func TestForward(t *testing.T) {
+	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
+	defer cancle()
+	pubsub := gopubsub.NewGoPubsub("pubsub", gopubsub.GoPubsubConfig{})
+	go producer(ctx, "main", pubsub)
+	handlerMain := processor.NewHandler("main", pubsub, func(msgCtx *message.Context) ([]*message.Context, error) {
+		t.Log("main", msgCtx)
+		return []*message.Context{msgCtx}, nil
+	})
+	handlerSub := processor.NewHandler("sub", pubsub, func(msgCtx *message.Context) ([]*message.Context, error) {
+		t.Log("sub", msgCtx)
+		return []*message.Context{msgCtx}, nil
+	})
+	handlerMain.AddForword(processor.Forward("sub", pubsub))
+	go handlerSub.Run(ctx)
+	handlerMain.Run(ctx)
+}
 
+func TestHandler_Middleware(t *testing.T) {
+	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
+	defer cancle()
 	pubsub := gopubsub.NewGoPubsub("pubsub", gopubsub.GoPubsubConfig{})
 
+	go producer(ctx, "main", pubsub)
+
+	handlerMain := processor.NewHandler("main", pubsub, func(msgCtx *message.Context) ([]*message.Context, error) {
+		t.Log("main", msgCtx, msgCtx.Err())
+		return []*message.Context{msgCtx}, nil
+	})
+
+	handlerMain.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {
+		return func(msg *message.Context) ([]*message.Context, error) {
+			t.Log("main执行前-m1", msg)
+			messages, err := fn(msg)
+			if err != nil {
+				return messages, err
+			}
+			t.Log("main执行后-m1", messages)
+			return messages, nil
+		}
+	})
+
+	t.Log(handlerMain)
+
+	handlerMain.Run(ctx, func(fn processor.HandlerFunc) processor.HandlerFunc {
+		return func(msg *message.Context) ([]*message.Context, error) {
+			t.Log("main执行前-m2", msg)
+			messages, err := fn(msg)
+			if err != nil {
+				return messages, err
+			}
+			t.Log("main执行后-m2", messages)
+			return messages, nil
+		}
+	})
+}
+func TestHandler_Stop(t *testing.T) {
+	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
+	defer cancle()
+	pubsub := gopubsub.NewGoPubsub("pubsub", gopubsub.GoPubsubConfig{})
+
+	go producer(ctx, "main", pubsub)
 	handlerMain := processor.NewHandler("main", pubsub, func(msgCtx *message.Context) ([]*message.Context, error) {
 		t.Log("main", msgCtx)
 		return []*message.Context{msgCtx}, nil
 	})
 
-	t.Run("test forward", func(t *testing.T) {
-		ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
-		defer cancle()
+	go handlerMain.Run(ctx)
 
-		go producer(ctx, "main", pubsub)
+	time.Sleep(time.Second)
 
-		handlerSub := processor.NewHandler("sub", pubsub, func(msgCtx *message.Context) ([]*message.Context, error) {
-			t.Log("sub", msgCtx)
-			return []*message.Context{msgCtx}, nil
-		})
-		handlerMain.AddForword(processor.Forward("sub", pubsub))
-		go handlerSub.Run(ctx)
-		handlerMain.Run(ctx)
+	handlerMain.Stop()
+}
+func TestNewHandler(t *testing.T) {
+	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
+	defer cancle()
+	pubsub := gopubsub.NewGoPubsub("pubsub", gopubsub.GoPubsubConfig{})
+	go producer(ctx, "main", pubsub)
+
+	handlerMain := processor.NewHandler("main", pubsub, func(msgCtx *message.Context) ([]*message.Context, error) {
+		t.Log("main", msgCtx)
+		return []*message.Context{msgCtx}, nil
 	})
-
-	//test Middleware
-	t.Run("test Middleware", func(t *testing.T) {
-		ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
-		defer cancle()
-
-		go producer(ctx, "main", pubsub)
-
-		handlerMain.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {
-			return func(msg *message.Context) ([]*message.Context, error) {
-				t.Log("main执行前")
-				messages, err := fn(msg)
-				if err != nil {
-					return messages, err
-				}
-				t.Log("main执行后", messages)
-				return messages, nil
-			}
-		})
-		handlerMain.Run(ctx)
-	})
-
-	t.Run("test stop", func(t *testing.T) {
-		ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
-		defer cancle()
-
-		go producer(ctx, "main", pubsub)
-
-		go handlerMain.Run(ctx)
-
-		time.Sleep(time.Second)
-
-		handlerMain.Stop()
-	})
+	handlerMain.Run(ctx)
 }
