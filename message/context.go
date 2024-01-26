@@ -41,13 +41,8 @@ func (c *Context) SetValue(k, v any) {
 	c.ctx = context.WithValue(c.ctx, k, v)
 }
 
-func (c *Context) SetContext(ctx context.Context) {
-	value := context.WithValue(ctx, setCtxKey, ctx)
-	c.ctx, c.cancel = context.WithCancelCause(value)
-}
-
 func (c *Context) Context() context.Context {
-	return c.ctx.Value(setCtxKey).(context.Context)
+	return c.ctx
 }
 
 // 为Context实现context.Context接口
