@@ -2,6 +2,10 @@
 
 # eio
 
+</div>
+
+
+
 eio is a Go library inspired by Watermill.
 In comparison to Watermill, eio focuses on providing the most essential and versatile functionalities.
 The code is more streamlined to ensure better scalability and usability.
@@ -9,7 +13,15 @@ By simplifying the interface and enhancing flexibility, it becomes more easily i
 More complex usage scenarios should be designed by developers.
 This way, developers can more effortlessly leverage eio to build small to medium-sized event-driven applications.
 
-</div>
+This is an ongoing project, and many APIs may still be unstable, subject to frequent updates. Please take note of the following:
+
+- **Instability:** The project is still in development, and some APIs may undergo frequent changes. Therefore, please check the release notes carefully when upgrading versions.
+
+- **Feedback and Contributions:** We welcome your feedback and contributions. If you encounter issues or have improvement suggestions, please raise them in the [Issue](https://github.com/qmstar0/eio/issues) section.
+
+- **Documentation:** As the project continues to evolve, the documentation may not be exhaustive. If you find any unclear points in the documentation, please let us know, and we will strive to improve it.
+
+Thank you for your interest and support in our project!
 
 ## Goals
 
