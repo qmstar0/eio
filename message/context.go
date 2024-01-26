@@ -26,6 +26,7 @@ func (c *Context) Ack() bool {
 		return true
 	}
 }
+
 func (c *Context) Nack(err error) bool {
 	select {
 	case <-c.ctx.Done():

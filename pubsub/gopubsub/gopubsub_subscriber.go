@@ -9,7 +9,7 @@ import (
 type subscriber struct {
 	ctx context.Context
 
-	messageCh     chan *message.Message
+	messageCh     chan *message.Context
 	messageChLock sync.Mutex
 
 	closing chan struct{}
@@ -29,12 +29,12 @@ func (s *subscriber) Close() {
 
 	close(s.messageCh)
 }
-func (s *subscriber) sendMessageToMessageChannel(msg *message.Message) {
+func (s *subscriber) sendMessageToMessageChannel(msg *message.Context) {
 	s.messageChLock.Lock()
 	defer s.messageChLock.Unlock()
 
 	select {
-	case s.messageCh <- msg.Copy():
+	case s.messageCh <- msg:
 	case <-s.closing:
 		return
 	}
