@@ -45,8 +45,6 @@ func (c *Context) Context() context.Context {
 	return c.ctx
 }
 
-// 为Context实现context.Context接口
-
 func (c *Context) Deadline() (deadline time.Time, ok bool) {
 	return c.ctx.Deadline()
 }

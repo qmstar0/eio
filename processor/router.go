@@ -172,16 +172,9 @@ func (r *Router) closeWhenAllHandlersStopped(ctx context.Context) {
 	}
 
 	r.runninghandlersWg.Wait()
-	//if r.IsClosed() {
-	//	// already closed
-	//	return
-	//}
-
-	// Only log an error if the context was not canceled, but handlers were stopped.
 	select {
 	case <-ctx.Done():
 	default:
-		//r.logger.Error("All handlers stopped, closing router", errors.New("all router handlers stopped"), nil)
 	}
 
 	err := r.Close()

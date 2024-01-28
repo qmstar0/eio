@@ -70,16 +70,12 @@ func (g *GoPubsub) sendMessage(topic string, message *message.Context) {
 	if len(subscribers) == 0 {
 		return
 	}
-	//wg := &sync.WaitGroup{}
 	for i := range subscribers {
 		subscriber := subscribers[i]
-		//wg.Add(1)
 		go func() {
 			subscriber.sendMessageToMessageChannel(message)
-			//wg.Done()
 		}()
 	}
-	//wg.Wait()
 }
 
 func (g *GoPubsub) Subscribe(ctx context.Context, topic string) (<-chan *message.Context, error) {
@@ -110,9 +106,9 @@ func (g *GoPubsub) Subscribe(ctx context.Context, topic string) (<-chan *message
 	go func(s *subscriber, g *GoPubsub) {
 		select {
 		case <-ctx.Done():
-			// unblock
+
 		case <-g.closing:
-			// unblock
+
 		}
 
 		s.Close()
@@ -160,7 +156,6 @@ func (g *GoPubsub) getSubscribersByTopic(topic string) []*subscriber {
 		return nil
 	}
 
-	// let's do a copy to avoid race conditions and deadlocks due to lock
 	subscribersCopy := make([]*subscriber, len(subscribers))
 	copy(subscribersCopy, subscribers)
 

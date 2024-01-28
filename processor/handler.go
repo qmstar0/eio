@@ -49,9 +49,6 @@ func NewHandler(topic string, sub eio.Subscriber, fn HandlerFunc) *Handler {
 		forwarders:     make([]Forwarder, 0),
 		forwardersLock: &sync.Mutex{},
 
-		//publisherMap:     make(map[string]eio.publisher),
-		//publisherMapLock: sync.Mutex{},
-
 		started:   false,
 		startedCh: make(chan struct{}),
 	}
@@ -59,26 +56,14 @@ func NewHandler(topic string, sub eio.Subscriber, fn HandlerFunc) *Handler {
 
 func (h *Handler) Run(ctx context.Context, middlewares ...HandlerMiddleware) {
 
-	// 初始化一个空的[]HandlerMiddleware
-	// 然后依次加入
-	// - 中间件(middlewares)
-	// - 以中间件形式使用的转发中间件(getForwarderMiddlewares(h.forwarders))
-
 	allMiddlewares := append(append(append([]HandlerMiddleware(nil),
 		middlewares...), h.middleware...), getForwarderMiddlewares(h.forwarders)...)
 
 	handlerFn := h.handlerFn
 
-	//添加中间件
 	for _, middleware := range allMiddlewares {
 		handlerFn = middleware(handlerFn)
 	}
-
-	//添加发布者
-	//for _, forwarder := range h.forwarders {
-	//	handlerFn := h.handlerFn
-	//	h.handlerFn = h.getDecoratedFunc(handlerFn, forwarder.topic, forwarder.publisher)
-	//}
 
 	subCtx, cancel := context.WithCancel(ctx)
 
