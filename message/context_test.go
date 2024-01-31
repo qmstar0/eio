@@ -25,7 +25,9 @@ func TestContext_DoneAndErr(t *testing.T) {
 		go func() {
 			select {
 			case <-msg.Done():
-				assert.Equal(t, msg.Err(), context.Canceled)
+				assert.NotEqual(t, msg.Err(), context.Canceled)
+				assert.Equal(t, msg.Err(), message.Done)
+				assert.Equal(t, errors.Unwrap(msg.Err()), nil)
 			}
 		}()
 
@@ -38,7 +40,8 @@ func TestContext_DoneAndErr(t *testing.T) {
 		go func() {
 			select {
 			case <-msg.Done():
-				assert.Equal(t, msg.Err(), err)
+				assert.NotEqual(t, msg.Err(), err)
+				assert.Equal(t, errors.Unwrap(msg.Err()), err)
 			}
 		}()
 

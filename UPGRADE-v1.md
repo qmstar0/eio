@@ -1,5 +1,12 @@
 # Version update record
 
+## v1.1.5
+
+Improve the message ending mechanism.
+
+After the current message context is processed correctly, using `msg.Err()` will return `message.Done`.
+(In previous versions, `msg.Err()` would return the `ctx.Err()` of the parent ctx)
+
 ## v1.1.4
 
 Delete `SetContext()` and add WithContext. The root ctx in `message.Context`cannot be modified at will.

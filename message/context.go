@@ -2,6 +2,8 @@ package message
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 )
 
@@ -22,7 +24,7 @@ func (c *Context) Ack() bool {
 	case <-c.ctx.Done():
 		return false
 	default:
-		c.cancel(nil)
+		c.cancel(Done)
 		return true
 	}
 }
@@ -32,7 +34,7 @@ func (c *Context) Nack(err error) bool {
 	case <-c.ctx.Done():
 		return false
 	default:
-		c.cancel(err)
+		c.cancel(notDone(err))
 		return true
 	}
 }
@@ -60,3 +62,8 @@ func (c *Context) Err() error {
 func (c *Context) Value(key any) any {
 	return c.ctx.Value(key)
 }
+
+var (
+	Done    = errors.New("message completed")
+	notDone = func(err error) error { return fmt.Errorf("message uncompleted: %w", err) }
+)
