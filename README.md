@@ -29,6 +29,10 @@ Thank you for your interest and support in our project!
 * It only provides **basic** and **general** functionalities, leaving more specialized scenarios to be implemented by developers.
 * As a **package**, it seamlessly integrates into your project rather than imposing itself as a rigid framework.
 
+## TODO
+
+- [ ] Fix the problem of occasional deadlock in `Router`
+
 ## What is a watermill?
 
 > Watermill is a Go library for working efficiently with message streams. It is intended for building event
