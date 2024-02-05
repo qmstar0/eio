@@ -34,7 +34,7 @@ func WithHeader(id string, header Header) *Context {
 	}
 }
 
-func WithBackground(id string) *Context {
+func WithEmpty(id string) *Context {
 	ctx, causeFunc := context.WithCancel(context.Background())
 	return &Context{
 		ID:      id,
