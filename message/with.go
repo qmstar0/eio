@@ -3,7 +3,7 @@ package message
 import "context"
 
 func WithContext(id string, c context.Context) *Context {
-	ctx, causeFunc := context.WithCancelCause(c)
+	ctx, causeFunc := context.WithCancel(c)
 	return &Context{
 		ID:      id,
 		Header:  make(Header),
@@ -14,7 +14,7 @@ func WithContext(id string, c context.Context) *Context {
 }
 
 func WithPayload(id string, payload Payload) *Context {
-	ctx, causeFunc := context.WithCancelCause(context.Background())
+	ctx, causeFunc := context.WithCancel(context.Background())
 	return &Context{
 		ID:      id,
 		Header:  make(Header),
@@ -24,7 +24,7 @@ func WithPayload(id string, payload Payload) *Context {
 	}
 }
 func WithHeader(id string, header Header) *Context {
-	ctx, causeFunc := context.WithCancelCause(context.Background())
+	ctx, causeFunc := context.WithCancel(context.Background())
 	return &Context{
 		ID:      id,
 		Header:  header,
@@ -35,7 +35,7 @@ func WithHeader(id string, header Header) *Context {
 }
 
 func WithBackground(id string) *Context {
-	ctx, causeFunc := context.WithCancelCause(context.Background())
+	ctx, causeFunc := context.WithCancel(context.Background())
 	return &Context{
 		ID:      id,
 		Header:  make(Header),

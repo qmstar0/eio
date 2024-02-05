@@ -26,7 +26,6 @@ func TestContext_DoneAndErr(t *testing.T) {
 			select {
 			case <-msg.Done():
 				assert.NotEqual(t, msg.Err(), context.Canceled)
-				assert.Equal(t, msg.Err(), message.Done)
 				assert.Equal(t, errors.Unwrap(msg.Err()), nil)
 			}
 		}()
