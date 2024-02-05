@@ -1,5 +1,11 @@
 # Version update record
 
+## v1.1.6
+
+修改了`message.Context`传播err的方式，不会再有`context.Context.Err()`的干扰
+
+修改`WithBackground()`为`WithEmpty()`，这应该会更符合语义
+
 ## v1.1.5
 
 Improve the message ending mechanism.
