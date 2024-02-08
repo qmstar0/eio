@@ -16,7 +16,7 @@ func createPubSub() (eio.Publisher, eio.Subscriber) {
 	return pubsub, pubsub
 }
 
-func createRouter() *processor.Router {
+func createRouter() processor.Router {
 	return processor.NewRouter()
 }
 
@@ -41,14 +41,14 @@ func Test(t *testing.T) {
 	pub, sub := createPubSub()
 	router := createRouter()
 
-	handler := router.AddHandler("1", "main", sub, func(msgCtx *message.Context) ([]*message.Context, error) {
-		t.Log("handler-main", msgCtx)
-		return []*message.Context{msgCtx}, nil
+	handler := router.AddHandler("1", "main", sub, func(msg *message.Context) ([]*message.Context, error) {
+		t.Log("handler-main", msg)
+		return []*message.Context{msg}, nil
 	})
 
-	router.AddHandler("2", "sub", sub, func(msgCtx *message.Context) ([]*message.Context, error) {
-		t.Log("handler-sub", msgCtx)
-		return []*message.Context{msgCtx}, nil
+	router.AddHandler("2", "sub", sub, func(msg *message.Context) ([]*message.Context, error) {
+		t.Log("handler-sub", msg)
+		return []*message.Context{msg}, nil
 	})
 
 	router.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {

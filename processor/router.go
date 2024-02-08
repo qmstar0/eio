@@ -16,6 +16,16 @@ type Route interface {
 	Started() chan struct{}
 }
 
+type Router interface {
+	Run(c context.Context) error
+	AddHandler(name, topic string, sub eio.Subscriber, handlerFn HandlerFunc) Route
+	AddMiddleware(middlewares ...HandlerMiddleware)
+	Running() <-chan struct{}
+	IsRunning() bool
+	IsClosed() bool
+	Close() error
+}
+
 type RouterConfig struct {
 	CloseTimeout time.Duration
 	// 也许以后有扩展
@@ -27,7 +37,7 @@ func (c *RouterConfig) setDefault() {
 	}
 }
 
-type Router struct {
+type router struct {
 	config RouterConfig
 
 	handlers          map[string]*Handler
@@ -48,9 +58,9 @@ type Router struct {
 	closed     bool
 }
 
-func NewRouterWithConfig(config RouterConfig) *Router {
+func NewRouterWithConfig(config RouterConfig) Router {
 	config.setDefault()
-	r := &Router{
+	r := &router{
 		config: config,
 
 		handlers:          make(map[string]*Handler),
@@ -74,11 +84,11 @@ func NewRouterWithConfig(config RouterConfig) *Router {
 	return r
 }
 
-func NewRouter() *Router {
+func NewRouter() Router {
 	return NewRouterWithConfig(RouterConfig{})
 }
 
-func (r *Router) Run(c context.Context) error {
+func (r *router) Run(c context.Context) error {
 	r.resetCloseState()
 
 	if r.isRunning {
@@ -106,7 +116,7 @@ func (r *Router) Run(c context.Context) error {
 
 }
 
-func (r *Router) runHandlers(routerCtx context.Context) error {
+func (r *router) runHandlers(routerCtx context.Context) error {
 
 	r.handlersLock.Lock()
 	defer r.handlersLock.Unlock()
@@ -137,7 +147,7 @@ func (r *Router) runHandlers(routerCtx context.Context) error {
 	return nil
 }
 
-func (r *Router) AddHandler(name, topic string, sub eio.Subscriber, handlerFn HandlerFunc) Route {
+func (r *router) AddHandler(name, topic string, sub eio.Subscriber, handlerFn HandlerFunc) Route {
 	r.handlersLock.Lock()
 	defer r.handlersLock.Unlock()
 
@@ -152,13 +162,13 @@ func (r *Router) AddHandler(name, topic string, sub eio.Subscriber, handlerFn Ha
 	return handler
 }
 
-func (r *Router) AddMiddleware(middlewares ...HandlerMiddleware) {
+func (r *router) AddMiddleware(middlewares ...HandlerMiddleware) {
 	r.middlewareLock.Lock()
 	defer r.middlewareLock.Unlock()
 	r.middleware = append(r.middleware, middlewares...)
 }
 
-func (r *Router) closeWhenAllHandlersStopped(ctx context.Context) {
+func (r *router) closeWhenAllHandlersStopped(ctx context.Context) {
 	r.handlersLock.RLock()
 	hasHandlers := len(r.handlers) != 0
 	r.handlersLock.RUnlock()
@@ -183,7 +193,7 @@ func (r *Router) closeWhenAllHandlersStopped(ctx context.Context) {
 	}
 }
 
-func (r *Router) waitForHandlersTimeouted() bool {
+func (r *router) waitForHandlersTimeouted() bool {
 	signal := make(chan struct{})
 	go func() {
 		r.runninghandlersWg.Wait()
@@ -198,11 +208,11 @@ func (r *Router) waitForHandlersTimeouted() bool {
 	}
 }
 
-func (r *Router) Running() <-chan struct{} {
+func (r *router) Running() <-chan struct{} {
 	return r.runningCh
 }
 
-func (r *Router) IsRunning() bool {
+func (r *router) IsRunning() bool {
 	select {
 	case <-r.runningCh:
 		return true
@@ -211,14 +221,14 @@ func (r *Router) IsRunning() bool {
 	}
 }
 
-func (r *Router) IsClosed() bool {
+func (r *router) IsClosed() bool {
 	r.closedLock.Lock()
 	defer r.closedLock.Unlock()
 
 	return r.closed
 }
 
-func (r *Router) Close() error {
+func (r *router) Close() error {
 	defer r.resetRunningState()
 
 	r.closedLock.Lock()
@@ -241,12 +251,12 @@ func (r *Router) Close() error {
 	return nil
 }
 
-func (r *Router) resetRunningState() {
+func (r *router) resetRunningState() {
 	r.runningCh = make(chan struct{})
 	r.isRunning = false
 }
 
-func (r *Router) resetCloseState() {
+func (r *router) resetCloseState() {
 	r.closingCh = make(chan struct{})
 	r.closedCh = make(chan struct{})
 	r.closed = false
