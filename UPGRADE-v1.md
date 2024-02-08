@@ -1,10 +1,14 @@
 # Version update record
 
+## v1.1.6.1
+
+Details updated, `Router` **structure** modified to `Router` **interface**
+
 ## v1.1.6
 
-修改了`message.Context`传播err的方式，不会再有`context.Context.Err()`的干扰
+Modified the way `message.Context` propagates err, so there will no longer be interference from `context.Context.Err()`
 
-修改`WithBackground()`为`WithEmpty()`，这应该会更符合语义
+Modify `WithBackground()` to `WithEmpty()`, which should be more semantic
 
 ## v1.1.5
 
