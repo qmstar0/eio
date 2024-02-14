@@ -8,16 +8,13 @@ import (
 	"sync"
 )
 
-type HandlerFunc func(msg *message.Context) ([]*message.Context, error)
+type HandlerFunc func(msg *message.Context) error
 
 type HandlerMiddleware func(fn HandlerFunc) HandlerFunc
 
 type Handler struct {
 	subscriber      eio.Subscriber
 	subscriberTopic string
-
-	forwarders     []Forwarder
-	forwardersLock *sync.Mutex
 
 	runningHandlersWgLock *sync.Mutex
 	runningHandlersWg     *sync.WaitGroup
@@ -46,9 +43,6 @@ func NewHandler(topic string, sub eio.Subscriber, fn HandlerFunc) *Handler {
 		middleware:     make([]HandlerMiddleware, 0),
 		middlewareLock: &sync.Mutex{},
 
-		forwarders:     make([]Forwarder, 0),
-		forwardersLock: &sync.Mutex{},
-
 		started:   false,
 		startedCh: make(chan struct{}),
 	}
@@ -56,8 +50,7 @@ func NewHandler(topic string, sub eio.Subscriber, fn HandlerFunc) *Handler {
 
 func (h *Handler) Run(ctx context.Context, middlewares ...HandlerMiddleware) {
 
-	allMiddlewares := append(append(append([]HandlerMiddleware(nil),
-		middlewares...), h.middleware...), getForwarderMiddlewares(h.forwarders)...)
+	allMiddlewares := append(append([]HandlerMiddleware(nil), middlewares...), h.middleware...)
 
 	handlerFn := h.handlerFn
 
@@ -104,13 +97,14 @@ func (h *Handler) handleMessage(msg *message.Context, handlerFn HandlerFunc) {
 		}
 	}()
 
-	_, err := handlerFn(msg)
-	if err != nil {
-		msg.Nack(err)
-		return
-	}
-
-	msg.Ack()
+	err := handlerFn(msg)
+	//if err != nil {
+	//	msg.Nack(err)
+	//	return
+	//}
+	//
+	//msg.Ack()
+	msg.Nack(err)
 }
 
 func (h *Handler) handleClose(ctx context.Context) {
@@ -125,12 +119,6 @@ func (h *Handler) AddMiddleware(ms ...HandlerMiddleware) {
 	h.middlewareLock.Lock()
 	defer h.middlewareLock.Unlock()
 	h.middleware = append(h.middleware, ms...)
-}
-
-func (h *Handler) AddForword(forwarder ...Forwarder) {
-	h.forwardersLock.Lock()
-	defer h.forwardersLock.Unlock()
-	h.forwarders = append(h.forwarders, forwarder...)
 }
 
 func (h *Handler) Stop() {

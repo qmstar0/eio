@@ -1,5 +1,13 @@
 # Version update record
 
+## v1.2.0
+
+From `type HandlerFunc func(msg *message.Context) ([]*message.Context, error)` to `type HandlerFunc func(msg *message.Context) error`
+
+Why do this?
+
+Considering that the forwarding function is not a necessary function, the forwarding function is classified as an extension and implemented by developers instead of implementing a non-essential function natively.
+
 ## v1.1.6.1
 
 Details updated, `Router` **structure** modified to `Router` **interface**

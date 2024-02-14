@@ -10,7 +10,6 @@ import (
 
 type Route interface {
 	AddMiddleware(ms ...HandlerMiddleware)
-	AddForword(forwarder ...Forwarder)
 	Stop()
 	Stopped() chan struct{}
 	Started() chan struct{}
