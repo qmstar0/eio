@@ -3,8 +3,8 @@ package processor
 import (
 	"context"
 	"fmt"
-	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
+	"github.com/qmstar0/eio/pubsub"
 	"sync"
 )
 
@@ -13,7 +13,7 @@ type HandlerFunc func(msg *message.Context) error
 type HandlerMiddleware func(fn HandlerFunc) HandlerFunc
 
 type Handler struct {
-	subscriber      eio.Subscriber
+	subscriber      pubsub.Subscriber
 	subscriberTopic string
 
 	runningHandlersWgLock *sync.Mutex
@@ -30,7 +30,7 @@ type Handler struct {
 	stopFn    context.CancelFunc
 }
 
-func NewHandler(topic string, sub eio.Subscriber, fn HandlerFunc) *Handler {
+func NewHandler(topic string, sub pubsub.Subscriber, fn HandlerFunc) *Handler {
 	return &Handler{
 		subscriber:      sub,
 		subscriberTopic: topic,

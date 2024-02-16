@@ -1,4 +1,4 @@
-package eio
+package pubsub
 
 import (
 	"context"

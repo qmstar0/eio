@@ -6,6 +6,7 @@ import (
 	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
 	"github.com/qmstar0/eio/processor"
+	"github.com/qmstar0/eio/pubsub"
 	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"testing"
 	"time"
@@ -15,7 +16,7 @@ var (
 	TimeOut = time.Second * 5
 )
 
-func producer(ctx context.Context, topic string, pub eio.Publisher) {
+func producer(ctx context.Context, topic string, pub pubsub.Publisher) {
 	for {
 		select {
 		case <-ctx.Done():

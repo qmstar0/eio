@@ -5,13 +5,14 @@ import (
 	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
 	"github.com/qmstar0/eio/processor"
+	"github.com/qmstar0/eio/pubsub"
 	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
-func createPubSub() (eio.Publisher, eio.Subscriber) {
+func createPubSub() (pubsub.Publisher, pubsub.Subscriber) {
 	pubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
 	return pubsub, pubsub
 }
@@ -20,7 +21,7 @@ func createRouter() processor.Router {
 	return processor.NewRouter()
 }
 
-func publishMessage(t *testing.T, ctx context.Context, topic string, publisher eio.Publisher) {
+func publishMessage(t *testing.T, ctx context.Context, topic string, publisher pubsub.Publisher) {
 	for {
 		select {
 		case <-ctx.Done():

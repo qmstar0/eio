@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
+	"github.com/qmstar0/eio/pubsub"
 	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"sync"
 	"testing"
@@ -12,7 +13,7 @@ import (
 
 var TestRunDuration = time.Second * 3
 
-func Publisher(t *testing.T, pub eio.Publisher, ctx context.Context) {
+func Publisher(t *testing.T, pub pubsub.Publisher, ctx context.Context) {
 	var count = 0
 	for {
 		select {
