@@ -1,11 +1,9 @@
-package gopubsub_test
+package eio_test
 
 import (
 	"context"
 	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
-	"github.com/qmstar0/eio/pubsub"
-	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"sync"
 	"testing"
 	"time"
@@ -13,7 +11,7 @@ import (
 
 var TestRunDuration = time.Second * 3
 
-func Publisher(t *testing.T, pub pubsub.Publisher, ctx context.Context) {
+func Publisher(t *testing.T, pub eio.Publisher, ctx context.Context) {
 	var count = 0
 	for {
 		select {
@@ -37,7 +35,7 @@ func Publisher(t *testing.T, pub pubsub.Publisher, ctx context.Context) {
 func TestGoPubsub(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub("test", eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 
@@ -58,7 +56,7 @@ func TestGoPubsub(t *testing.T) {
 func TestGoPubsub_Close(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub("test", eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 
@@ -91,7 +89,7 @@ func TestGoPubsub_Close(t *testing.T) {
 func TestPublishers(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub("test", eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 

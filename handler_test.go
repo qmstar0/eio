@@ -1,13 +1,10 @@
-package processor_test
+package eio_test
 
 import (
 	"context"
 	"fmt"
 	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
-	"github.com/qmstar0/eio/processor"
-	"github.com/qmstar0/eio/pubsub"
-	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"testing"
 	"time"
 )
@@ -16,7 +13,7 @@ var (
 	TimeOut = time.Second * 5
 )
 
-func producer(ctx context.Context, topic string, pub pubsub.Publisher) {
+func producer(ctx context.Context, topic string, pub eio.Publisher) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -35,16 +32,16 @@ func producer(ctx context.Context, topic string, pub pubsub.Publisher) {
 func TestHandler_Middleware(t *testing.T) {
 	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
 	defer cancle()
-	pubsub := gopubsub.NewGoPubsub("pubsub", gopubsub.GoPubsubConfig{})
+	pubsub := eio.NewGoPubsub("pubsub", eio.GoPubsubConfig{})
 
 	go producer(ctx, "main", pubsub)
 
-	handlerMain := processor.NewHandler("main", pubsub, func(msgCtx *message.Context) error {
+	handlerMain := eio.NewHandler("main", pubsub, func(msgCtx *message.Context) error {
 		t.Log("main", msgCtx, msgCtx.Err())
 		return nil
 	})
 
-	handlerMain.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {
+	handlerMain.AddMiddleware(func(fn eio.HandlerFunc) eio.HandlerFunc {
 		return func(msg *message.Context) error {
 			t.Log("main执行前-m1")
 			err := fn(msg)
@@ -58,7 +55,7 @@ func TestHandler_Middleware(t *testing.T) {
 
 	t.Log(handlerMain)
 
-	handlerMain.Run(ctx, func(fn processor.HandlerFunc) processor.HandlerFunc {
+	handlerMain.Run(ctx, func(fn eio.HandlerFunc) eio.HandlerFunc {
 		return func(msg *message.Context) error {
 			t.Log("main执行前-m2")
 			err := fn(msg)
@@ -73,10 +70,10 @@ func TestHandler_Middleware(t *testing.T) {
 func TestHandler_Stop(t *testing.T) {
 	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
 	defer cancle()
-	pubsub := gopubsub.NewGoPubsub("pubsub", gopubsub.GoPubsubConfig{})
+	pubsub := eio.NewGoPubsub("pubsub", eio.GoPubsubConfig{})
 
 	go producer(ctx, "main", pubsub)
-	handlerMain := processor.NewHandler("main", pubsub, func(msgCtx *message.Context) error {
+	handlerMain := eio.NewHandler("main", pubsub, func(msgCtx *message.Context) error {
 		t.Log("main", msgCtx)
 		return nil
 	})
@@ -90,10 +87,10 @@ func TestHandler_Stop(t *testing.T) {
 func TestNewHandler(t *testing.T) {
 	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
 	defer cancle()
-	pubsub := gopubsub.NewGoPubsub("pubsub", gopubsub.GoPubsubConfig{})
+	pubsub := eio.NewGoPubsub("pubsub", eio.GoPubsubConfig{})
 	go producer(ctx, "main", pubsub)
 
-	handlerMain := processor.NewHandler("main", pubsub, func(msgCtx *message.Context) error {
+	handlerMain := eio.NewHandler("main", pubsub, func(msgCtx *message.Context) error {
 		t.Log("main", msgCtx)
 		return nil
 	})

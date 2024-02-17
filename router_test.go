@@ -1,27 +1,24 @@
-package processor_test
+package eio_test
 
 import (
 	"context"
 	"github.com/qmstar0/eio"
 	"github.com/qmstar0/eio/message"
-	"github.com/qmstar0/eio/processor"
-	"github.com/qmstar0/eio/pubsub"
-	"github.com/qmstar0/eio/pubsub/gopubsub"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
-func createPubSub() (pubsub.Publisher, pubsub.Subscriber) {
-	pubsub := gopubsub.NewGoPubsub("test", gopubsub.GoPubsubConfig{})
+func createPubSub() (eio.Publisher, eio.Subscriber) {
+	pubsub := eio.NewGoPubsub("test", eio.GoPubsubConfig{})
 	return pubsub, pubsub
 }
 
-func createRouter() processor.Router {
-	return processor.NewRouter()
+func createRouter() eio.Router {
+	return eio.NewRouter()
 }
 
-func publishMessage(t *testing.T, ctx context.Context, topic string, publisher pubsub.Publisher) {
+func publishMessage(t *testing.T, ctx context.Context, topic string, publisher eio.Publisher) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -52,7 +49,7 @@ func Test(t *testing.T) {
 		return nil
 	})
 
-	router.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {
+	router.AddMiddleware(func(fn eio.HandlerFunc) eio.HandlerFunc {
 		return func(msg *message.Context) error {
 			t.Log("router-middleware 在handler前")
 			err := fn(msg)
@@ -62,7 +59,7 @@ func Test(t *testing.T) {
 		}
 	})
 
-	handler.AddMiddleware(func(fn processor.HandlerFunc) processor.HandlerFunc {
+	handler.AddMiddleware(func(fn eio.HandlerFunc) eio.HandlerFunc {
 		return func(msg *message.Context) error {
 			t.Log("handler-middleware 在handler前", msg)
 			err := fn(msg)
@@ -111,7 +108,7 @@ func TestRouterCloseTimeout(t *testing.T) {
 	defer cancel()
 
 	pub, sub := createPubSub()
-	router := processor.NewRouterWithConfig(processor.RouterConfig{CloseTimeout: time.Second * 2})
+	router := eio.NewRouterWithConfig(eio.RouterConfig{CloseTimeout: time.Second * 2})
 
 	router.AddHandler("1", "main", sub, func(msg *message.Context) error {
 		t.Log("main", msg)
@@ -139,7 +136,7 @@ func TestRouterRuntimeHandlerStep(t *testing.T) {
 	defer cancel()
 
 	pub, sub := createPubSub()
-	router := processor.NewRouterWithConfig(processor.RouterConfig{CloseTimeout: time.Second * 2})
+	router := eio.NewRouterWithConfig(eio.RouterConfig{CloseTimeout: time.Second * 2})
 
 	handler := router.AddHandler("1", "main", sub, func(msg *message.Context) error {
 		t.Log("main", msg)

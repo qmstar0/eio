@@ -1,5 +1,9 @@
 # Version update record
 
+## v1.3.1
+
+Modify project directory structure
+
 ## v1.2.0
 
 From `type HandlerFunc func(msg *message.Context) ([]*message.Context, error)` to `type HandlerFunc func(msg *message.Context) error`

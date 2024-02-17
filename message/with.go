@@ -1,46 +1,37 @@
 package message
 
-import "context"
+import (
+	"context"
+)
 
 func WithContext(id string, c context.Context) *Context {
-	ctx, causeFunc := context.WithCancel(c)
+	ctx, cc := context.WithCancel(c)
 	return &Context{
 		ID:      id,
 		Header:  make(Header),
 		Payload: make(Payload, 0),
 		ctx:     ctx,
-		cancel:  causeFunc,
+		cancel:  cc,
 	}
 }
-
 func WithPayload(id string, payload Payload) *Context {
-	ctx, causeFunc := context.WithCancel(context.Background())
+	ctx, cc := context.WithCancel(context.Background())
 	return &Context{
 		ID:      id,
 		Header:  make(Header),
 		Payload: payload,
 		ctx:     ctx,
-		cancel:  causeFunc,
+		cancel:  cc,
 	}
 }
+
 func WithHeader(id string, header Header) *Context {
-	ctx, causeFunc := context.WithCancel(context.Background())
+	ctx, cc := context.WithCancel(context.Background())
 	return &Context{
 		ID:      id,
 		Header:  header,
 		Payload: make(Payload, 0),
 		ctx:     ctx,
-		cancel:  causeFunc,
-	}
-}
-
-func WithEmpty(id string) *Context {
-	ctx, causeFunc := context.WithCancel(context.Background())
-	return &Context{
-		ID:      id,
-		Header:  make(Header),
-		Payload: make(Payload, 0),
-		ctx:     ctx,
-		cancel:  causeFunc,
+		cancel:  cc,
 	}
 }

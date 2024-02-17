@@ -1,9 +1,8 @@
-package processor
+package eio
 
 import (
 	"context"
 	"errors"
-	"github.com/qmstar0/eio/pubsub"
 	"sync"
 	"time"
 )
@@ -17,7 +16,7 @@ type Route interface {
 
 type Router interface {
 	Run(c context.Context) error
-	AddHandler(name, topic string, sub pubsub.Subscriber, handlerFn HandlerFunc) Route
+	AddHandler(name, topic string, sub Subscriber, handlerFn HandlerFunc) Route
 	AddMiddleware(middlewares ...HandlerMiddleware)
 	Running() <-chan struct{}
 	IsRunning() bool
@@ -146,7 +145,7 @@ func (r *router) runHandlers(routerCtx context.Context) error {
 	return nil
 }
 
-func (r *router) AddHandler(name, topic string, sub pubsub.Subscriber, handlerFn HandlerFunc) Route {
+func (r *router) AddHandler(name, topic string, sub Subscriber, handlerFn HandlerFunc) Route {
 	r.handlersLock.Lock()
 	defer r.handlersLock.Unlock()
 
