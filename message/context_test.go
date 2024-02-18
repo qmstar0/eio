@@ -48,12 +48,6 @@ func TestContext_DoneAndErr(t *testing.T) {
 	})
 }
 
-func TestContext_Header(t *testing.T) {
-	msg := message.WithPayload(eio.NewUUID(), []byte("hi"))
-	msg.Header.Set("testkey", "testvalue")
-	assert.Equal(t, msg.Header.Get("testkey"), "testvalue")
-}
-
 func TestContext_Timeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

@@ -6,7 +6,7 @@ import (
 )
 
 type Publisher interface {
-	Publish(topic string, messages ...*message.Context) error
+	Publish(topic string, message ...*message.Context) error
 	Close() error
 }
 

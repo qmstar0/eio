@@ -8,14 +8,10 @@ import (
 
 type Payload []byte
 type Context struct {
-	ID string
-
-	Header Header
-
+	ID      string
 	Payload Payload
-
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
 func (c *Context) Ack() bool {

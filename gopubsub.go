@@ -8,12 +8,10 @@ import (
 )
 
 type GoPubsubConfig struct {
-	MessageChannelBuffer int64
+	MessageChannelBuffer int
 }
 type GoPubsub struct {
-	name   string
-	config GoPubsubConfig
-
+	config          GoPubsubConfig
 	subscribers     map[string][]*subscriber
 	subscribersLock sync.RWMutex
 	topicLock       sync.Map
@@ -24,9 +22,8 @@ type GoPubsub struct {
 	closedLock sync.Mutex
 }
 
-func NewGoPubsub(name string, config GoPubsubConfig) *GoPubsub {
+func NewGoPubsub(config GoPubsubConfig) *GoPubsub {
 	return &GoPubsub{
-		name:            name,
 		config:          config,
 		subscribers:     make(map[string][]*subscriber),
 		subscribersLock: sync.RWMutex{},
@@ -36,10 +33,6 @@ func NewGoPubsub(name string, config GoPubsubConfig) *GoPubsub {
 		closed:          false,
 		closedLock:      sync.Mutex{},
 	}
-}
-
-func (g *GoPubsub) Name() string {
-	return g.name
 }
 
 func (g *GoPubsub) Publish(topic string, messageCtxs ...*message.Context) error {

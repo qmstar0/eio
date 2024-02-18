@@ -35,7 +35,7 @@ func Publisher(t *testing.T, pub eio.Publisher, ctx context.Context) {
 func TestGoPubsub(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := eio.NewGoPubsub("test", eio.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 
@@ -50,13 +50,12 @@ func TestGoPubsub(t *testing.T) {
 	for msg := range messageCh {
 		t.Log("收到消息:", msg)
 	}
-	time.Sleep(time.Millisecond * 500)
 }
 
 func TestGoPubsub_Close(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := eio.NewGoPubsub("test", eio.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 
@@ -89,7 +88,7 @@ func TestGoPubsub_Close(t *testing.T) {
 func TestPublishers(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := eio.NewGoPubsub("test", eio.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 

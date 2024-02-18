@@ -10,7 +10,7 @@ import (
 )
 
 func createPubSub() (eio.Publisher, eio.Subscriber) {
-	pubsub := eio.NewGoPubsub("test", eio.GoPubsubConfig{})
+	pubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
 	return pubsub, pubsub
 }
 
@@ -33,7 +33,7 @@ func publishMessage(t *testing.T, ctx context.Context, topic string, publisher e
 
 func Test(t *testing.T) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	pub, sub := createPubSub()
@@ -104,7 +104,7 @@ func Test(t *testing.T) {
 }
 
 func TestRouterCloseTimeout(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	pub, sub := createPubSub()

@@ -32,7 +32,7 @@ func producer(ctx context.Context, topic string, pub eio.Publisher) {
 func TestHandler_Middleware(t *testing.T) {
 	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
 	defer cancle()
-	pubsub := eio.NewGoPubsub("pubsub", eio.GoPubsubConfig{})
+	pubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
 
 	go producer(ctx, "main", pubsub)
 
@@ -70,7 +70,7 @@ func TestHandler_Middleware(t *testing.T) {
 func TestHandler_Stop(t *testing.T) {
 	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
 	defer cancle()
-	pubsub := eio.NewGoPubsub("pubsub", eio.GoPubsubConfig{})
+	pubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
 
 	go producer(ctx, "main", pubsub)
 	handlerMain := eio.NewHandler("main", pubsub, func(msgCtx *message.Context) error {
@@ -87,7 +87,7 @@ func TestHandler_Stop(t *testing.T) {
 func TestNewHandler(t *testing.T) {
 	ctx, cancle := context.WithTimeout(context.Background(), TimeOut)
 	defer cancle()
-	pubsub := eio.NewGoPubsub("pubsub", eio.GoPubsubConfig{})
+	pubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
 	go producer(ctx, "main", pubsub)
 
 	handlerMain := eio.NewHandler("main", pubsub, func(msgCtx *message.Context) error {
