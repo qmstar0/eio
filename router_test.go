@@ -9,11 +9,6 @@ import (
 	"time"
 )
 
-func createPubSub() (eio.Publisher, eio.Subscriber) {
-	pubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
-	return pubsub, pubsub
-}
-
 func createRouter() eio.Router {
 	return eio.NewRouter()
 }
@@ -36,15 +31,15 @@ func Test(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	pub, sub := createPubSub()
+	pubsub := eio.NewGoPubsub(ctx, eio.GoPubsubConfig{})
 	router := createRouter()
 
-	handler := router.AddHandler("1", "main", sub, func(msg *message.Context) error {
+	handler := router.AddHandler("1", "main", pubsub, func(msg *message.Context) error {
 		t.Log("handler-main", msg)
 		return nil
 	})
 
-	router.AddHandler("2", "sub", sub, func(msg *message.Context) error {
+	router.AddHandler("2", "sub", pubsub, func(msg *message.Context) error {
 		t.Log("handler-sub", msg)
 		return nil
 	})
@@ -69,7 +64,7 @@ func Test(t *testing.T) {
 		}
 	})
 
-	go publishMessage(t, ctx, "main", pub)
+	go publishMessage(t, ctx, "main", pubsub)
 
 	go func() {
 		<-router.Running()
@@ -107,17 +102,17 @@ func TestRouterCloseTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	pub, sub := createPubSub()
+	pubsub := eio.NewGoPubsub(ctx, eio.GoPubsubConfig{})
 	router := eio.NewRouterWithConfig(eio.RouterConfig{CloseTimeout: time.Second * 2})
 
-	router.AddHandler("1", "main", sub, func(msg *message.Context) error {
+	router.AddHandler("1", "main", pubsub, func(msg *message.Context) error {
 		t.Log("main", msg)
 		// 每个handler阻塞5秒
 		time.Sleep(time.Second * 5)
 		return nil
 	})
 
-	go producer(ctx, "main", pub)
+	go producer(ctx, "main", pubsub)
 
 	go func() {
 		err := router.Run(ctx)
@@ -135,17 +130,17 @@ func TestRouterRuntimeHandlerStep(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	pub, sub := createPubSub()
+	pubsub := eio.NewGoPubsub(ctx, eio.GoPubsubConfig{})
 	router := eio.NewRouterWithConfig(eio.RouterConfig{CloseTimeout: time.Second * 2})
 
-	handler := router.AddHandler("1", "main", sub, func(msg *message.Context) error {
+	handler := router.AddHandler("1", "main", pubsub, func(msg *message.Context) error {
 		t.Log("main", msg)
 		// 每个handler阻塞3秒
 		time.Sleep(time.Second * 3)
 		return nil
 	})
 
-	go producer(ctx, "main", pub)
+	go producer(ctx, "main", pubsub)
 
 	//测试当router中的handler停止后，router是否正常关闭
 	go func() {

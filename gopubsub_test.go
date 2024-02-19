@@ -16,7 +16,6 @@ func Publisher(t *testing.T, pub eio.Publisher, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			t.Logf("context.Done(); 共计发布%d次", count)
 			return
 		default:
 			if err := pub.Publish(
@@ -26,7 +25,6 @@ func Publisher(t *testing.T, pub eio.Publisher, ctx context.Context) {
 				t.Logf("context.Done(); 共计发布%d次", count)
 				return
 			}
-			count++
 			time.Sleep(time.Millisecond * 100)
 		}
 	}
@@ -35,14 +33,28 @@ func Publisher(t *testing.T, pub eio.Publisher, ctx context.Context) {
 func TestGoPubsub(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub(ctx, eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 
-	subCtx, subCancel := context.WithCancel(ctx)
-	defer subCancel()
+	messageCh, err := goPubsub.Subscribe(ctx, "pub_test")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	messageCh, err := goPubsub.Subscribe(subCtx, "pub_test")
+	for msg := range messageCh {
+		t.Log("收到消息:", msg)
+	}
+}
+
+func TestGoPubsub_CtxClose(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
+	defer cancel()
+	pubsub := eio.NewGoPubsub(ctx, eio.GoPubsubConfig{})
+
+	go Publisher(t, pubsub, ctx)
+
+	messageCh, err := pubsub.Subscribe(context.TODO(), "pub_test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +67,7 @@ func TestGoPubsub(t *testing.T) {
 func TestGoPubsub_Close(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub(ctx, eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 
@@ -88,7 +100,7 @@ func TestGoPubsub_Close(t *testing.T) {
 func TestPublishers(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), TestRunDuration)
 	defer cancel()
-	goPubsub := eio.NewGoPubsub(eio.GoPubsubConfig{})
+	goPubsub := eio.NewGoPubsub(ctx, eio.GoPubsubConfig{})
 
 	go Publisher(t, goPubsub, ctx)
 

@@ -11,26 +11,26 @@ type GoPubsubConfig struct {
 	MessageChannelBuffer int
 }
 type GoPubsub struct {
+	ctx             context.Context
+	closeFn         context.CancelFunc
 	config          GoPubsubConfig
 	subscribers     map[string][]*subscriber
 	subscribersLock sync.RWMutex
 	topicLock       sync.Map
 	subscribersWg   sync.WaitGroup
-
-	closing    chan struct{}
-	closed     bool
-	closedLock sync.Mutex
+	closedLock      sync.Mutex
 }
 
-func NewGoPubsub(config GoPubsubConfig) *GoPubsub {
+func NewGoPubsub(c context.Context, config GoPubsubConfig) *GoPubsub {
+	ctx, cancelFunc := context.WithCancel(c)
 	return &GoPubsub{
+		ctx:             ctx,
+		closeFn:         cancelFunc,
 		config:          config,
 		subscribers:     make(map[string][]*subscriber),
 		subscribersLock: sync.RWMutex{},
 		topicLock:       sync.Map{},
 		subscribersWg:   sync.WaitGroup{},
-		closing:         make(chan struct{}),
-		closed:          false,
 		closedLock:      sync.Mutex{},
 	}
 }
@@ -49,9 +49,7 @@ func (g *GoPubsub) Publish(topic string, messageCtxs ...*message.Context) error 
 
 	for i := range messageCtxs {
 		msg := messageCtxs[i]
-
 		g.sendMessage(topic, msg)
-
 	}
 
 	return nil
@@ -72,40 +70,30 @@ func (g *GoPubsub) sendMessage(topic string, message *message.Context) {
 }
 
 func (g *GoPubsub) Subscribe(ctx context.Context, topic string) (<-chan *message.Context, error) {
-	g.closedLock.Lock()
-
-	if g.closed {
-		g.closedLock.Unlock()
+	if g.isClosed() {
 		return nil, errors.New("Pub/Sub closed")
 	}
 
 	g.subscribersWg.Add(1)
-	g.closedLock.Unlock()
-
 	g.subscribersLock.Lock()
 
 	subLock, _ := g.topicLock.LoadOrStore(topic, &sync.Mutex{})
 	subLock.(*sync.Mutex).Lock()
+	c, cancelFunc := context.WithCancel(ctx)
 
 	s := &subscriber{
-		ctx:           ctx,
+		ctx:           c,
 		messageCh:     make(chan *message.Context, g.config.MessageChannelBuffer),
 		messageChLock: sync.Mutex{},
-
-		closed:  false,
-		closing: make(chan struct{}),
 	}
 
 	go func(s *subscriber, g *GoPubsub) {
 		select {
-		case <-ctx.Done():
-
-		case <-g.closing:
-
+		case <-s.ctx.Done():
+		case <-g.ctx.Done():
+			cancelFunc()
 		}
-
 		s.Close()
-
 		g.subscribersLock.Lock()
 		defer g.subscribersLock.Unlock()
 
@@ -156,13 +144,9 @@ func (g *GoPubsub) getSubscribersByTopic(topic string) []*subscriber {
 }
 
 func (g *GoPubsub) Close() error {
-
 	g.closedLock.Lock()
 	defer g.closedLock.Unlock()
-
-	g.closed = true
-	close(g.closing)
-
+	g.closeFn()
 	g.subscribersWg.Wait()
 	return nil
 }
@@ -171,30 +155,23 @@ func (g *GoPubsub) isClosed() bool {
 	g.closedLock.Lock()
 	defer g.closedLock.Unlock()
 
-	return g.closed
+	select {
+	case <-g.ctx.Done():
+		return true
+	default:
+		return false
+	}
 }
 
 type subscriber struct {
-	ctx context.Context
-
+	ctx           context.Context
 	messageCh     chan *message.Context
 	messageChLock sync.Mutex
-
-	closing chan struct{}
-	closed  bool
 }
 
 func (s *subscriber) Close() {
-	if s.closed {
-		return
-	}
-	close(s.closing)
-
 	s.messageChLock.Lock()
 	defer s.messageChLock.Unlock()
-
-	s.closed = true
-
 	close(s.messageCh)
 }
 func (s *subscriber) sendMessageToMessageChannel(msg *message.Context) {
@@ -203,7 +180,7 @@ func (s *subscriber) sendMessageToMessageChannel(msg *message.Context) {
 
 	select {
 	case s.messageCh <- msg:
-	case <-s.closing:
+	case <-s.ctx.Done():
 		return
 	}
 }
