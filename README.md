@@ -19,7 +19,7 @@ English|[中文](README_ZH.md)
 ## Installation
 
 ```bash
-go get -u github.com/yourusername/eio
+go get -u github.com/qmstar0/eio
 ```
 
 ## Contribution

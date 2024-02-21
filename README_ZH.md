@@ -19,7 +19,7 @@
 ## 安装
 
 ```bash
-go get -u github.com/yourusername/eio
+go get -u github.com/qmstar0/eio
 ```
 
 ## 贡献
