@@ -1,16 +1,13 @@
 package eio
 
-import (
-	"context"
-	"github.com/qmstar0/eio/message"
-)
+import "context"
 
 type Publisher interface {
-	Publish(topic string, message ...*message.Context) error
+	Publish(topic string, message ...Message) error
 	Close() error
 }
 
 type Subscriber interface {
-	Subscribe(ctx context.Context, topic string) (<-chan *message.Context, error)
+	Subscribe(ctx context.Context, topic string) (<-chan Message, error)
 	Close() error
 }
