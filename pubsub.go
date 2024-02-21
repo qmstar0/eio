@@ -3,7 +3,7 @@ package eio
 import "context"
 
 type Publisher interface {
-	Publish(topic string, message ...Message) error
+	Publish(ctx context.Context, topic string, message Message) error
 	Close() error
 }
 
