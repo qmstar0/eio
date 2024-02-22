@@ -28,4 +28,4 @@ Contributions in the form of code or issue reports are welcome. Please refer to 
 
 ## License
 
-[MIT License](./LICENSE)
+[Apache License 2.0](./LICENSE)

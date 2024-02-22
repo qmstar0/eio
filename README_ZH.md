@@ -28,4 +28,4 @@ go get -u github.com/qmstar0/eio
 
 ## 许可证
 
-[MIT License](./LICENSE)
+[Apache License 2.0](./LICENSE)
